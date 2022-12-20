@@ -41,14 +41,6 @@ impl TriggerButton {
 }
 
 #[derive(Default)]
-struct DPad {
-	dup: ControllerButton,
-	ddown: ControllerButton,
-	dleft: ControllerButton,
-	dright: ControllerButton,
-}
-
-#[derive(Default)]
 struct AnalogStick  {
 	stick_x: f32,
     stick_y: f32,
@@ -96,7 +88,10 @@ impl AnalogStick {
 
 #[derive(Default)]
 struct ControllerState {
-	dpad: DPad,
+    dpadup: ControllerButton,
+	dpaddown: ControllerButton,
+	dpadleft: ControllerButton,
+	dpadright: ControllerButton,
 	start: ControllerButton,
     back: ControllerButton,
     a: ControllerButton,
@@ -168,10 +163,10 @@ impl GamepadManager {
                             Button::Start => {self.controller_state.start.changed_button_event(value)},
                             Button::LeftThumb => {self.controller_state.left_analog.changed_button_event(value)},
                             Button::RightThumb => {self.controller_state.right_analog.changed_button_event(value)},
-                            Button::DPadUp => {self.controller_state.dpad.dup.changed_button_event(value)},
-                            Button::DPadDown => {self.controller_state.dpad.ddown.changed_button_event(value)},
-                            Button::DPadLeft => {self.controller_state.dpad.dleft.changed_button_event(value)},
-                            Button::DPadRight => {self.controller_state.dpad.dright.changed_button_event(value)},
+                            Button::DPadUp => {self.controller_state.dpadup.changed_button_event(value)},
+                            Button::DPadDown => {self.controller_state.dpaddown.changed_button_event(value)},
+                            Button::DPadLeft => {self.controller_state.dpadleft.changed_button_event(value)},
+                            Button::DPadRight => {self.controller_state.dpadright.changed_button_event(value)},
                             _ => (),
                         }
                     },
@@ -197,35 +192,4 @@ impl GamepadManager {
             println!("Axis after deadzones: Left Stick {:?} | Right Stick {:?}", self.controller_state.left_analog.stick_direction(), self.controller_state.right_analog.stick_direction());
         }
     }
-}
-
-
-
-pub fn check_gamepads() {
-    let mut gilrs = Gilrs::new().unwrap();
-
-    // Iterate over all connected gamepads
-    for (_id, gamepad) in gilrs.gamepads() {
-        println!("{} is {:?}", gamepad.name(), gamepad.power_info());
-    }   
-
-    let mut active_gamepad = None;
-
-    let mut controller_input = ControllerState::default();
-
-    loop {
-        // Examine new events
-        while let Some(Event { id, event, time }) = gilrs.next_event() {
-            println!("{:?} New event from {}: {:?}", time, id, event);
-            active_gamepad = Some(id);
-        }
-    
-        // You can also use cached gamepad state
-        if let Some(gamepad) = active_gamepad.map(|id| gilrs.gamepad(id)) {
-            if gamepad.is_pressed(Button::South) {
-                println!("Button South is pressed (XBox - A, PS - X)");
-            }
-        }
-    }
-
 }
