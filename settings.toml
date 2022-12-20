@@ -1,0 +1,34 @@
+[overlay]
+screen_height = 1024
+screen_width = 1280
+show_crosshair = false
+show_buttons = false
+
+[button_mapping]
+x = "q"
+y = "r"
+a = "w"
+b = "e"
+start = "i"
+back = "tab"
+dpad_down = "2"
+dpad_left = "1"
+dpad_right = "3"
+dpad_up = "4"
+stick_button_left = "space"
+stick_button_right = "5"
+bumper_left = "MiddleClick"
+bumper_right = "RightClick"
+trigger_left = "esc"
+trigger_right = "AltLeftClick"
+
+[controller]
+walk_circle_radius_px = "110"
+close_circle_radius_px = "110"
+mid_circle_radius_px = "250"
+far_circle_radius_px = "380"
+character_x_offset_px = "0"
+character_y_offset_px = "100"
+dead_zone_percentage = "0.17"
+free_mouse_sensitivity_px = "8"
+fuck_xbox_game_bar = true

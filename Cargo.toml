@@ -2,10 +2,12 @@
 name = "exile-controller"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
 
 [dependencies]
+config = "0.13.3"
+serde = "1.0.151"
+gilrs = {version ="0.10.1", default-features = false, features = ["xinput"]}
 
 [[bin]]
 name = "exile-controller"
