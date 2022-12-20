@@ -2,16 +2,16 @@ use config::Config;
 use std::collections::HashMap;
 
 pub struct OverlaySettings {
-    screen_height: i64,
-    screen_width: i64,
+    screen_height: u32,
+    screen_width: u32,
     show_crosshair: bool,
     show_buttons: bool,
 }
 
 impl OverlaySettings {
-    pub fn screen_height(&self) -> i64 {self.screen_height}
+    pub fn screen_height(&self) -> u32 {self.screen_height}
 
-    pub fn screen_width(&self) -> i64 {self.screen_width}
+    pub fn screen_width(&self) -> u32 {self.screen_width}
     
     pub fn show_crosshair(&self) -> bool {self.show_crosshair}
 
@@ -73,8 +73,8 @@ pub fn load_settings() -> ApplicationSettings {
     
     return ApplicationSettings {
         overlay_settings: OverlaySettings {
-                            screen_height: settings.get_int("overlay.screen_height").unwrap(),
-                            screen_width: settings.get_int("overlay.screen_height").unwrap(),
+                            screen_height: settings.get_int("overlay.screen_height").unwrap() as u32,
+                            screen_width: settings.get_int("overlay.screen_height").unwrap() as u32,
                             show_crosshair: settings.get_bool("overlay.show_crosshair").unwrap(),
                             show_buttons: settings.get_bool("overlay.show_buttons").unwrap(),
                         },
