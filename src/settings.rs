@@ -74,7 +74,7 @@ pub fn load_settings() -> ApplicationSettings {
     return ApplicationSettings {
         overlay_settings: OverlaySettings {
                             screen_height: settings.get_int("overlay.screen_height").unwrap() as u32,
-                            screen_width: settings.get_int("overlay.screen_height").unwrap() as u32,
+                            screen_width: settings.get_int("overlay.screen_width").unwrap() as u32,
                             show_crosshair: settings.get_bool("overlay.show_crosshair").unwrap(),
                             show_buttons: settings.get_bool("overlay.show_buttons").unwrap(),
                         },
