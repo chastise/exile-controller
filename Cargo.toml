@@ -8,6 +8,10 @@ license = "MIT"
 config = "0.13.3"
 serde = "1.0.151"
 gilrs = {version ="0.10.1", default-features = false, features = ["xinput"]}
+egui_backend = "0.2.0"
+egui_render_wgpu = "0.3.0"
+egui_window_glfw_passthrough = "0.2.1"
+
 
 [[bin]]
 name = "exile-controller"
