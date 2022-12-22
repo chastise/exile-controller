@@ -8,9 +8,19 @@ license = "MIT"
 config = "0.13.3"
 serde = "1.0.151"
 gilrs = {version ="0.10.1", default-features = false, features = ["xinput"]}
-egui_backend = "0.2.0"
-egui_render_wgpu = "0.3.0"
+
+egui = "0.19.0"
+egui_extras = {version = "0.19.0", features = ["image"]}
+image = { version = "0.24", features = ["png"] }
+
+
+egui_backend = { version = "0.2.0", features = ["egui_bytemuck"] }
 egui_window_glfw_passthrough = "0.2.1"
+
+intmap = { version = "2" }
+bytemuck = { version = "1" }
+wgpu = { version = "0.13", features = ["webgl"]}
+pollster = { version = "0.2" }
 
 
 [[bin]]

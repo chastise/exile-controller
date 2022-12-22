@@ -1,6 +1,6 @@
 [overlay]
-screen_height = 1024
-screen_width = 1280
+screen_height = 1080
+screen_width = 1920
 show_crosshair = false
 show_buttons = false
 
