@@ -14,6 +14,7 @@ fn main() {
                 application_settings.overlay_settings().screen_height(), 
                 application_settings.overlay_settings().screen_width(),
             );
+
     // println!("Starting gamepad manager.");    
     // let gamepad_trigger_threshold = 0.8 as f32; // For quick tweaking
     // let mut gamepad_manager = input::load_gamepad_manager(gamepad_trigger_threshold, 
@@ -23,5 +24,7 @@ fn main() {
     //     gamepad_manager.read_latest_input();
     //     sleep(Duration::from_millis(5 as u64));
     // }
-    game_overlay::start_overlay(application_settings.overlay_settings());
+
+    println!("Starting overlay");
+    game_overlay::start_overlay(application_settings.overlay_settings(), application_settings.controller_settings());
 }

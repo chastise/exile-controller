@@ -1,8 +1,8 @@
 [overlay]
 screen_height = 1080
 screen_width = 1920
-show_crosshair = false
-show_buttons = false
+show_crosshair = true
+show_buttons = true
 
 [button_mapping]
 x = "q"

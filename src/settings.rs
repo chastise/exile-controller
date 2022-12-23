@@ -1,5 +1,4 @@
 use config::Config;
-use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct OverlaySettings {
@@ -11,11 +10,8 @@ pub struct OverlaySettings {
 
 impl OverlaySettings {
     pub fn screen_height(&self) -> f32 {self.screen_height}
-
     pub fn screen_width(&self) -> f32 {self.screen_width}
-    
     pub fn show_crosshair(&self) -> bool {self.show_crosshair}
-
     pub fn show_buttons(&self) -> bool {self.show_buttons}
 }
 
@@ -30,6 +26,7 @@ impl OverlaySettings {
 //     }
 // }
 
+#[derive(Clone)]
 pub struct ButtonMappingSettings {
     a: String,
     b: String,
@@ -37,12 +34,17 @@ pub struct ButtonMappingSettings {
     y: String,
 }
 
+#[derive(Clone)]
 pub struct ControllerSettings {
     controller_deadzone: f32,
+    character_x_offset_px: f32,
+    character_y_offset_px: f32,
 }
 
 impl ControllerSettings {
     pub fn controller_deadzone(&self) -> f32 {self.controller_deadzone}
+    pub fn character_x_offset_px(&self) -> f32 {self.character_x_offset_px}
+    pub fn character_y_offset_px(&self) -> f32 {self.character_y_offset_px}
 }
 
 pub struct ApplicationSettings {
@@ -54,9 +56,9 @@ pub struct ApplicationSettings {
 impl ApplicationSettings {
     pub fn overlay_settings(&self) -> OverlaySettings {self.overlay_settings.clone()}
 
-    pub fn button_mapping_settings(&self) -> &ButtonMappingSettings {&self.button_mapping_settings}
+    pub fn button_mapping_settings(&self) -> ButtonMappingSettings {self.button_mapping_settings.clone()}
     
-    pub fn controller_settings(&self) -> &ControllerSettings {&self.controller_settings}
+    pub fn controller_settings(&self) -> ControllerSettings {self.controller_settings.clone()}
 }
 
 pub fn load_settings() -> ApplicationSettings {
@@ -87,6 +89,8 @@ pub fn load_settings() -> ApplicationSettings {
          },
         controller_settings: ControllerSettings {  
             controller_deadzone: settings.get_float("controller.dead_zone_percentage").unwrap() as f32,
+            character_x_offset_px: settings.get_float("controller.character_x_offset_px").unwrap() as f32,
+            character_y_offset_px: settings.get_float("controller.character_y_offset_px").unwrap() as f32,
         },
     }
 }
