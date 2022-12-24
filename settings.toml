@@ -15,12 +15,27 @@ dpad_down = "2"
 dpad_left = "1"
 dpad_right = "3"
 dpad_up = "4"
-stick_button_left = "space"
-stick_button_right = "5"
+left_analog = "space" #L3
+right_analog = "5" #R3
 bumper_left = "MiddleClick"
 bumper_right = "RightClick"
-trigger_left = "esc"
+trigger_left = "escape"
 trigger_right = "AltLeftClick"
+
+# Enables move-aiming with the right stick
+# Bumpers, triggers and abxy only!
+[aimable_buttons]
+aimable = ["bumper_right", "y", "a"]
+
+# Sets action distance from character when pushed while moving or move-aiming. 
+# Ideal for setting movement skill distances, totem drop distances, etc
+# Must be close/mid/far; Aimable buttons without this will snap to "walk" distance.
+# When not moving or move-aiming, all skills target current mouse position without snapping.
+# May get weird if holding several buttons.
+# Bumpers, triggers and abxy only!
+[action_distance]
+x = "far"
+a = "mid"
 
 [controller]
 walk_circle_radius_px = "110"
@@ -31,4 +46,3 @@ character_x_offset_px = "0"
 character_y_offset_px = "100"
 dead_zone_percentage = "0.17"
 free_mouse_sensitivity_px = "8"
-fuck_xbox_game_bar = true
