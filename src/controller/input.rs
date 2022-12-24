@@ -152,16 +152,18 @@ impl ControllerState {
 
 pub struct GamepadManager {
     gilrs_context: Gilrs,
-    gamepad_id: GamepadId,
+    gamepad_id: Option<GamepadId>,
     pub controller_state: ControllerState,
 }
 
 pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f32) -> GamepadManager {
     let gilrs = Gilrs::new().unwrap();
-    
-    // todo: change this to be detected, passed to, and handled through the overlay    
-    let connected_gamepad_id = gilrs.gamepads().next().unwrap_or_else(
-        || panic!("No gamepad connected!")).0;
+      
+    let potentially_connected_gamepad = gilrs.gamepads().next();
+    let connected_gamepad_id = match potentially_connected_gamepad {
+        Some((gamepad_id, _gamepad)) => Some(gamepad_id),
+        _ => None,
+    };
 
     let mut gamepad_manager = GamepadManager{
         gilrs_context: gilrs,
@@ -182,9 +184,14 @@ pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f3
 impl GamepadManager {
     pub fn read_latest_input(&mut self) {
         let mut did_axis_change = false;
+        let gamepad_id = self.gamepad_id.unwrap();
         while let Some(Event { id, event, time: _ }) = self.gilrs_context.next_event() {
-            if id == self.gamepad_id {
+            if id == gamepad_id {
                 match event {
+                    EventType::Disconnected => {
+                        let was_disconnected = self.disconect_connected_controller();
+                        println!("controller disconnected during input read? {:?}", was_disconnected);
+                    }
                     EventType::ButtonChanged(button, value, _code) => {
                         //println!("Button Changed! {:?}: {value} : {code}!", button);
                         match button {
@@ -225,8 +232,31 @@ impl GamepadManager {
             // println!("Axis after deadzones: Left Stick {:?} | Right Stick {:?}", self.controller_state.left_analog.stick_direction(), self.controller_state.right_analog.stick_direction());
         }
     }
+
+    pub fn check_if_controller_disconnected(&mut self) -> bool {
+        let mut was_disconnected = false;
+        if self.is_controller_connected() {
+            let gamepad_id = self.gamepad_id.unwrap();
+            while let Some(Event { id, event, time: _ }) = self.gilrs_context.next_event() {
+                if id == gamepad_id {
+                    match event {
+                        EventType::Disconnected => {
+                            was_disconnected = self.disconect_connected_controller();
+                        },
+                        _ => ()
+                    }
+                }
+            }
+        }
+        return was_disconnected;
+    }
     
-    pub fn get_connected_controllers(&self) -> Vec<(GamepadId, String)> { 
+    pub fn force_check_new_controllers(&mut self) {
+        // Force a new Gilrs instance because hotplugging doesn't seem to be working
+        self.gilrs_context = Gilrs::new().unwrap();
+    }
+
+    pub fn get_connected_controllers(&mut self) -> Vec<(GamepadId, String)> { 
         let mut connected_controllers = Vec::<(GamepadId, String)>::new();
         for (gamepad_id, gamepad) in self.gilrs_context.gamepads() {
             connected_controllers.push((gamepad_id, gamepad.name().to_string()));
@@ -234,7 +264,36 @@ impl GamepadManager {
         connected_controllers
     }
 
-    pub fn select_connected_controller(&mut self, gamepad_id: GamepadId) { self.gamepad_id = gamepad_id }
+    pub fn is_controller_connected(&self) -> bool {
+        match self.gamepad_id {
+            Some(_c) => true,
+            None => false,
+        }
+    }
+
+    pub fn connect_to_controller(&mut self, connected_controllers: Vec<(GamepadId, String)>, index: usize) { 
+        let gamepad_id = connected_controllers[index].0;
+        self.gamepad_id = Some(gamepad_id);
+        println!("Controller connected!");
+    }
+
+    pub fn get_connected_controller_label(&self) -> String {
+        if self.is_controller_connected() {
+            self.gilrs_context.gamepad(self.gamepad_id.unwrap()).os_name().to_owned()
+        } else {
+            "none".to_owned()
+        }
+    }
+
+    pub fn disconect_connected_controller(&mut self) -> bool {
+        if self.is_controller_connected() {
+            self.gamepad_id = None;
+            true
+        } else {
+            println!("Failed to disconnect controller. Already disconnected?");
+            false
+        }
+    }
 
     // pub fn controller_state(&mut self) -> &mut ControllerState {&mut self.controller_state}
 }

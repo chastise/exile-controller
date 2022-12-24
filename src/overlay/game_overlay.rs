@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use super::egui_overlay;
 use crate::controller::action_manager::ActionManager;
 use crate::controller::input::GamepadManager;
@@ -40,6 +42,7 @@ struct GameOverlay {
     remote_open: bool,
     remote_pos: Pos2,
     game_input_started: bool,
+    controller_check_timer: Instant,
 }
 
 impl GameOverlay {
@@ -92,14 +95,26 @@ impl GameOverlay {
     fn draw_remote(&mut self, ctx: &Context) {
         let new_pos;
         if self.remote_open {
-            //let connected_controllers = self.gamepad_manager.get_connected_controllers();
-            new_pos = egui_backend::egui::Window::new("Exile Controller Remote")
+            if !self.gamepad_manager.is_controller_connected() && Instant::now() > self.controller_check_timer + Duration::from_secs(1) {
+                self.controller_check_timer = Instant::now();
+                self.gamepad_manager.force_check_new_controllers();
+                let connected_controllers = self.gamepad_manager.get_connected_controllers();
+                println!("Connected controller count: {:?}", connected_controllers.len());
+                if connected_controllers.len() > 0 {
+                    self.gamepad_manager.connect_to_controller(connected_controllers, 0);
+                }
+            }
+            
+            
+            new_pos = egui::Window::new("Exile Controller Remote")
                                     .resizable(false)
+                                    .current_pos(self.remote_pos)
                                     .drag_bounds(self.window_rect)
                                     .collapsible(true)
-                                    .current_pos(self.remote_pos)
                                     .show(ctx,|ui| {
-                                        // if connected_controllers.len() > 0 {
+                                        if self.gamepad_manager.is_controller_connected() {
+                                            let controller_label =  self.gamepad_manager.get_connected_controller_label();
+                                            let label = ui.label(String::from("Controller connected: ") + controller_label.as_str());
                                         //     let mut selected = 0 as usize;
                                         //     egui::ComboBox::from_label("Select Connected Controller:")
                                         //     .selected_text(format!("{:?}", selected))
@@ -108,7 +123,10 @@ impl GameOverlay {
                                         // } else {
                                         //     let mut selected = 0 as usize;
                                         //     egui::ComboBox::from_label("Connect a controller").selected_text("None connected").show_index(ui, &mut selected, 1, |_i| "".to_string());
-                                        // }
+                                        } else {
+                                            let label = ui.label(String::from("No controller connected."));
+                                        }
+
                                         let start_button = ui.button("Start Controller Input");
                                         if start_button.clicked() {
                                             self.remote_open = false;
@@ -116,11 +134,12 @@ impl GameOverlay {
                                             //self.remote_close_widget.current_pos(self.remote_pos);
                                         }
                                     }).unwrap().response.rect.left_top();
+            self.gamepad_manager.check_if_controller_disconnected();
         } else {
-            new_pos =  egui_backend::egui::Window::new("Exile Controller Minimized Remote")
+            new_pos =  egui::Window::new("Exile Controller Minimized Remote")
                                     .resizable(false)
-                                    .drag_bounds(self.window_rect)
                                     .current_pos(self.remote_pos)
+                                    .drag_bounds(self.window_rect)
                                     .title_bar(false)
                                     .fixed_size(Vec2{x:100.0,y:100.0})
                                     .frame(egui::Frame::default()
@@ -140,9 +159,16 @@ impl GameOverlay {
         }
         self.update_remote_pos(new_pos);
     }
+
     fn update_remote_pos(&mut self, new_position: Pos2) {
         self.remote_pos = new_position;
     }
+
+    // fn draw_controller_connected_label(&mut self, ctx: &Context, is_connected controller_id: String) {
+    //     let label = egui::widgets::Label::new(controller_id);
+    //     label.show()
+
+    // }
 
     fn handle_controller_input_loop (&mut self) {
         self.gamepad_manager.read_latest_input();
@@ -172,21 +198,28 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
 
             if self.overlay_settings.show_crosshair() {
                 self.paint_crosshair(egui_context);
-            } else {
-                egui_backend::egui::Area::new("No Crash Rectangle")
-                                        .default_pos(Pos2{x:0.0,y:0.0})
-                                        .show(egui_context,|ui| { 
-                                            let size = Vec2::splat(1.0);
-                                            let (response, painter) = ui.allocate_painter(size, egui::Sense::hover());
-                                            painter.rect(response.rect, 
-                                                            egui::Rounding{ nw: 0.0, ne: 0.0, sw: 0.0, se: 0.0 }, 
-                                                            egui::Color32::RED, 
-                                                            egui::Stroke{width:0.0, color:egui::Color32::TRANSPARENT});
-                                        });
             }
 
             self.handle_controller_input_loop();
+            if !self.gamepad_manager.is_controller_connected() {
+                self.game_input_started = false;
+                self.remote_open = true;
+            }
         }
+        
+        // The wgpu renderer panics when a frame has no vertices onscreen. 
+        // This includes an offscreen remote or only images being drawn.
+
+        // egui_backend::egui::Area::new("No Crash Rectangle")
+        //                                 .default_pos(Pos2{x:0.0,y:0.0})
+        //                                 .show(egui_context,|ui| { 
+        //                                     let size = Vec2::splat(1.0);
+        //                                     let (response, painter) = ui.allocate_painter(size, egui::Sense::hover());
+        //                                     painter.rect(response.rect, 
+        //                                                     egui::Rounding{ nw: 0.0, ne: 0.0, sw: 0.0, se: 0.0 }, 
+        //                                                     egui::Color32::RED, 
+        //                                                     egui::Stroke{width:0.0, color:egui::Color32::TRANSPARENT});
+        //                                 });
 
         if egui_context.wants_pointer_input() || egui_context.wants_keyboard_input() {
             glfw_backend.window.set_mouse_passthrough(false);
@@ -207,10 +240,11 @@ pub fn start_overlay(overlay_settings: OverlaySettings, controller_settings: Con
         gamepad_manager: gamepad_manager,
         game_action_handler: game_action_handler,
         remote_open: true,
-        remote_pos: Pos2 { x: 200.0, y: 200.0 },
+        remote_pos: Pos2 { x: screen_width / 2.0 , y: screen_height / 4.0 },
         game_input_started: false,
+        controller_check_timer: Instant::now(),
     };
 
-
-    egui_overlay::start_egui_overlay(game_overlay);
+    // TODO: Figure out how to pass screen width and height so the first frame isn't mysteriously 800x600
+    egui_overlay::start_egui_overlay(game_overlay, screen_width as i32, screen_height as i32);
 }
