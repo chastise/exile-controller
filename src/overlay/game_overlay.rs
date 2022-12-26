@@ -1,11 +1,12 @@
 use std::time::{Duration, Instant};
+use std::process::exit;
 
 use super::egui_overlay;
 use crate::controller::action_manager::ActionManager;
 use crate::controller::input::GamepadManager;
 use crate::settings::{OverlaySettings, ControllerSettings};
 
-use egui::{Vec2, Context};
+use egui::{Vec2, Context, epaint, Color32};
 use egui_backend::{egui, UserApp};
 use egui_backend::egui::{Rect, Pos2};
 use crate::overlay::egui_render_wgpu::egui_render_wgpu::WgpuBackend;
@@ -13,21 +14,35 @@ use egui_extras::RetainedImage;
 
 
 struct OverlayImages {
+    button_d_up: RetainedImage,
+    button_d_down: RetainedImage,
+    button_d_left: RetainedImage,
+    button_d_right: RetainedImage,
+
     button_a: RetainedImage,
     button_b: RetainedImage,
     button_x: RetainedImage,
     button_y: RetainedImage,
-    //crosshair: RetainedImage,
+
+    button_l3: RetainedImage,
+    button_r3: RetainedImage,
 }
 
 impl Default for OverlayImages {
     fn default() -> Self {
         Self {
-            button_a: RetainedImage::from_image_bytes("buttonA.png",  include_bytes!("..\\img\\buttonA.png")).unwrap(),
-            button_b: RetainedImage::from_image_bytes("buttonB.png", include_bytes!("..\\img\\buttonB.png")).unwrap(),
-            button_x: RetainedImage::from_image_bytes("buttonX.png", include_bytes!("..\\img\\buttonX.png")).unwrap(),
-            button_y: RetainedImage::from_image_bytes("buttonY.png", include_bytes!("..\\img\\buttonY.png")).unwrap(),
-            //crosshair: RetainedImage::from_image_bytes("crosshair.png", include_bytes!("..\\img\\crosshair.png")).unwrap(),
+            button_d_up: RetainedImage::from_image_bytes("dpad_up.png", include_bytes!("..\\img\\dpad_up.png")).unwrap(),
+            button_d_down: RetainedImage::from_image_bytes("dpad_down.png", include_bytes!("..\\img\\dpad_down.png")).unwrap(),
+            button_d_left: RetainedImage::from_image_bytes("dpad_left.png", include_bytes!("..\\img\\dpad_left.png")).unwrap(),
+            button_d_right: RetainedImage::from_image_bytes("dpad_right.png", include_bytes!("..\\img\\dpad_right.png")).unwrap(),
+
+            button_a: RetainedImage::from_image_bytes("button_a.png",  include_bytes!("..\\img\\button_a.png")).unwrap(),
+            button_b: RetainedImage::from_image_bytes("button_b.png", include_bytes!("..\\img\\button_b.png")).unwrap(),
+            button_x: RetainedImage::from_image_bytes("button_x.png", include_bytes!("..\\img\\button_x.png")).unwrap(),
+            button_y: RetainedImage::from_image_bytes("button_y.png", include_bytes!("..\\img\\button_y.png")).unwrap(),
+
+            button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("..\\img\\button_l3.png")).unwrap(),
+            button_r3: RetainedImage::from_image_bytes("button_r3.png", include_bytes!("..\\img\\button_r3.png")).unwrap(),
         }
     }
 }
@@ -58,7 +73,7 @@ impl GameOverlay {
     fn place_abxy_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
         let x_offset = 0.8215;
         let x_offset_offset = 0.029;
-        let y_offset = 0.965;
+        let y_offset = 0.97;
         self.place_overlay_image(ctx, &images.button_x, 
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*3.0), y: self.overlay_settings.screen_height() * y_offset }, 
                        "button_x");
@@ -71,12 +86,27 @@ impl GameOverlay {
         self.place_overlay_image(ctx, &images.button_y, 
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset },
                         "button_y");
-        /*
-        // g.sprites.sprites[1] = loadSprite(overlayImgX, 0.8215-0.02875*3, 0.97)
-        // g.sprites.sprites[2] = loadSprite(overlayImgA, 0.8215-0.02875*2, 0.97)
-        // g.sprites.sprites[3] = loadSprite(overlayImgB, 0.8215-0.02875*1, 0.97)
-        // g.sprites.sprites[4] = loadSprite(overlayImgY, 0.8215, 0.97)
-        */
+    }
+
+    fn place_flask_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
+        let x_offset = 0.26;
+        let x_offset_offset = 0.0242;
+        let y_offset = 0.97;
+        self.place_overlay_image(ctx, &images.button_d_left, 
+            Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*4.0), y: self.overlay_settings.screen_height() * y_offset }, 
+           "button_d_left");
+        self.place_overlay_image(ctx, &images.button_d_down, 
+                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*3.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                       "button_d_down");
+        self.place_overlay_image(ctx, &images.button_d_right, 
+                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                        "button_d_right");
+        self.place_overlay_image(ctx, &images.button_d_up, 
+                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                        "button_d_up");
+        self.place_overlay_image(ctx, &images.button_r3, 
+                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset },
+                        "button_r3");
     }
 
     fn paint_crosshair (&self, ctx: &Context) {
@@ -92,9 +122,31 @@ impl GameOverlay {
                                             painter.circle_stroke( response.rect.center(), crosshair_radius,  egui::Stroke{width:1.5, color:egui::Color32::RED});
                                         });
     }
+
     fn draw_remote(&mut self, ctx: &Context) {
         let new_pos;
+        let mut gui_style = (*ctx.style()).clone();
+
+        gui_style.text_styles = [
+            (egui::TextStyle::Heading, egui::FontId::new(16.0, egui::FontFamily::Monospace)),
+            (egui::TextStyle::Body, egui::FontId::new(14.0, egui::FontFamily::Proportional)),
+            (egui::TextStyle::Monospace, egui::FontId::new(14.0, egui::FontFamily::Proportional)),
+            (egui::TextStyle::Button, egui::FontId::new(12.0, egui::FontFamily::Proportional)),
+            (egui::TextStyle::Small, egui::FontId::new(10.0, egui::FontFamily::Proportional)),
+          ].into();
+        ctx.set_style(gui_style);
+
+    
+        let mut gui_visuals = ctx.style().visuals.clone();
+        gui_visuals.window_shadow = epaint::Shadow{extrusion: 0.0, color: Color32::DARK_GRAY};
+        gui_visuals.widgets.noninteractive.bg_stroke = epaint::Stroke {width: 1.5, color: Color32::from_rgb(138, 90, 62)};
+        gui_visuals.widgets.inactive.bg_stroke = epaint::Stroke {width: 1.0, color: Color32::from_rgb(100,100,100)};
+        gui_visuals.widgets.noninteractive.fg_stroke = epaint::Stroke {width: 1.0, color: Color32::from_rgb(215,210,210)};
+        gui_visuals.widgets.active.fg_stroke = epaint::Stroke {width: 1.0, color: Color32::from_rgb(215,210,210)};
+        ctx.set_visuals(gui_visuals);
+
         if self.remote_open {
+            // Check for connected controllers
             if !self.gamepad_manager.is_controller_connected() && Instant::now() > self.controller_check_timer + Duration::from_secs(1) {
                 self.controller_check_timer = Instant::now();
                 self.gamepad_manager.force_check_new_controllers();
@@ -104,57 +156,65 @@ impl GameOverlay {
                     self.gamepad_manager.connect_to_controller(connected_controllers, 0);
                 }
             }
-            
-            
-            new_pos = egui::Window::new("Exile Controller Remote")
+            // Draw the remote
+            new_pos = egui::Window::new(egui::RichText::new("Exile Controller").color(Color32::from_rgb(227, 117, 0)).strong())
                                     .resizable(false)
                                     .current_pos(self.remote_pos)
                                     .drag_bounds(self.window_rect)
-                                    .collapsible(true)
+                                    .collapsible(false)
                                     .show(ctx,|ui| {
-                                        if self.gamepad_manager.is_controller_connected() {
-                                            let controller_label =  self.gamepad_manager.get_connected_controller_label();
-                                            let label = ui.label(String::from("Controller connected: ") + controller_label.as_str());
-                                        //     let mut selected = 0 as usize;
-                                        //     egui::ComboBox::from_label("Select Connected Controller:")
-                                        //     .selected_text(format!("{:?}", selected))
-                                        //     .show_index(ui, &mut selected, connected_controllers.len(), |i| connected_controllers[i].1.to_owned());
-                                        //     self.gamepad_manager.select_connected_controller(connected_controllers.get(selected).unwrap().0);
-                                        // } else {
-                                        //     let mut selected = 0 as usize;
-                                        //     egui::ComboBox::from_label("Connect a controller").selected_text("None connected").show_index(ui, &mut selected, 1, |_i| "".to_string());
-                                        } else {
-                                            let label = ui.label(String::from("No controller connected."));
-                                        }
-
-                                        let start_button = ui.button("Start Controller Input");
-                                        if start_button.clicked() {
-                                            self.remote_open = false;
-                                            self.game_input_started = true;
-                                            //self.remote_close_widget.current_pos(self.remote_pos);
-                                        }
+                                        egui::Grid::new("Remote Grid ID").min_col_width(220.0).show(ui, |ui| {
+                                            let mut can_overlay_start = true;
+                                            if self.gamepad_manager.is_controller_connected() {
+                                                let controller_label =  self.gamepad_manager.get_connected_controller_label();
+                                                ui.label(String::from("Controller connected: ") + controller_label.as_str());
+                                            //     let mut selected = 0 as usize;
+                                            //     egui::ComboBox::from_label("Select Connected Controller:")
+                                            //     .selected_text(format!("{:?}", selected))
+                                            //     .show_index(ui, &mut selected, connected_controllers.len(), |i| connected_controllers[i].1.to_owned());
+                                            //     self.gamepad_manager.select_connected_controller(connected_controllers.get(selected).unwrap().0);
+                                            // } else {
+                                            //     let mut selected = 0 as usize;
+                                            //     egui::ComboBox::from_label("Connect a controller").selected_text("None connected").show_index(ui, &mut selected, 1, |_i| "".to_string());
+                                            } else {
+                                                ui.label(String::from("No controller connected."));
+                                                can_overlay_start = false;
+                                            }
+                                            ui.end_row();
+                                            ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
+                                                let start_button = ui.add_enabled(can_overlay_start, egui::Button::new("Start Controller Input"));
+                                                if start_button.clicked() {
+                                                    self.remote_open = false;
+                                                    self.game_input_started = true;
+                                                }
+                                                let quit_button = ui.add_enabled(true, egui::Button::new("Quit"));
+                                                if quit_button.clicked() {
+                                                    exit(0);
+                                                }
+                                            });
+                                        });
                                     }).unwrap().response.rect.left_top();
             self.gamepad_manager.check_if_controller_disconnected();
         } else {
+            // Draw the minimized remote
             new_pos =  egui::Window::new("Exile Controller Minimized Remote")
                                     .resizable(false)
                                     .current_pos(self.remote_pos)
                                     .drag_bounds(self.window_rect)
                                     .title_bar(false)
-                                    .fixed_size(Vec2{x:100.0,y:100.0})
-                                    .frame(egui::Frame::default()
-                                                //.outer_margin(egui::style::Margin{ left: 0.0, right: 0.0, top: 0.0, bottom: 0.0 })
-                                                .rounding(egui::Rounding{ nw: 1.0, ne: 1.0, sw: 1.0, se: 1.0 })
-                                                .shadow(egui::epaint::Shadow{extrusion: 0.0, color: egui::Color32::TRANSPARENT})
-                                                .stroke(egui::Stroke{width:1.5, color:egui::Color32::WHITE})
-                                    )
                                     .show(ctx,|ui| {
-                                        let pause_button = ui.button("X").on_hover_text("Pause Controller Input");
-                                        if pause_button.clicked() {
-                                            self.remote_open = true;
-                                            self.game_input_started = false;
-                                            //self.remote_open_widget.current_pos(self.remote_pos);
-                                        }
+                                        egui::Grid::new("Pause Grid ID").min_col_width(220.0).show(ui, |ui| {
+                                            ui.with_layout(egui::Layout::centered_and_justified(egui::Direction::TopDown), |ui| {
+                                                let pause_button = ui.button(egui::RichText::new("Pause Overlay")
+                                                                                            .color(Color32::from_rgb(227, 117, 0))
+                                                                                            .size(14.0)
+                                                                                        ).on_hover_text("Pause Controller Input");
+                                                if pause_button.clicked() {
+                                                    self.remote_open = true;
+                                                    self.game_input_started = false;
+                                                }
+                                            })
+                                        })
                                     }).unwrap().response.rect.left_top();
         }
         self.update_remote_pos(new_pos);
@@ -194,7 +254,10 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
         self.draw_remote(egui_context);
 
         if self.game_input_started {
-            if self.overlay_settings.show_buttons() {self.place_abxy_overlay_images(egui_context, &self.overlay_images);}
+            if self.overlay_settings.show_buttons() {
+                self.place_flask_overlay_images(egui_context, &self.overlay_images);
+                self.place_abxy_overlay_images(egui_context, &self.overlay_images);
+            }
 
             if self.overlay_settings.show_crosshair() {
                 self.paint_crosshair(egui_context);
