@@ -92,6 +92,8 @@ impl ActionManager {
     }
 
     pub fn handle_character_actions(&mut self, ctx: &egui::Context) {
+        let mut set_cursor = false;
+
         // Execute planned actions
         while let Some(planned_action) = self.planned_actions.pop() {
             let key_name = self.settings.button_mapping_settings().get(&planned_action.name).unwrap().to_string();
@@ -101,14 +103,17 @@ impl ActionManager {
                     if self.holding_walk && self.holding_aim {
                         let (new_x, new_y) = self.get_radial_location(self.get_attack_circle_radius(planned_action.distance), self.aiming_angle);
                         self.action_handler.move_mouse(new_x as f64, new_y as f64);
+                        set_cursor = true;
                     } else if self.holding_walk && !self.holding_aim {
                         let (new_x, new_y) = self.get_radial_location(self.get_attack_circle_radius(planned_action.distance), self.walking_angle);
                         self.action_handler.move_mouse(new_x as f64, new_y as f64);
+                        set_cursor = true;
                     }
                     // todo probably inject a delay for the two above
                 } else if planned_action.distance != ActionDistance::None && self.holding_walk {
                         let (new_x, new_y) = self.get_radial_location(self.get_attack_circle_radius(planned_action.distance), self.walking_angle);
                         self.action_handler.move_mouse(new_x as f64, new_y as f64);
+                        set_cursor = true;
                 }
                 self.action_handler.handle_action(ActionType::Press, key_name);
             } else {
@@ -121,28 +126,33 @@ impl ActionManager {
         // If none of the held abilities are aimable or have preset distances, this causes the cursor to snap to the walking circle if held.
         // If none of the held abilities are aimable or have preset distances, AND we're not walking, this lets you free-aim the ability with right stick
         self.holding_ability = self.action_handler.is_ability_key_held();
+        
 
         if self.holding_ability && self.holding_walk {
             let held_ability_actions: Vec<String> = self.action_handler.get_held_ability_actions()
                                                                         .iter()
                                                                         .map(|key| self.settings.ability_mapping_settings().get(key).unwrap().to_owned())
                                                                         .collect();
-            let held_abilities_with_action_distance_set = held_ability_actions.into_iter()
-                                                                                    .filter(|action| self.get_ability_action_distance(action) != ActionDistance::None);
+            
+            // Check if any of the held actions are aimable, even if they have no action distance set
             let mut some_held_action_aimable = false;
-            let mut chosen_distance =  0.0;
-            // println!("{:?}", held_abilities_with_action_distance_set.clone());
-            // println!("{:?}", held_abilities_with_action_distance_set.clone().map(|action| (action.to_owned(), self.get_attack_circle_radius(self.get_ability_action_distance(&action)))) );
-            for (action, distance) in held_abilities_with_action_distance_set.map(|action| (action.to_owned(), self.get_attack_circle_radius(self.get_ability_action_distance(&action)))) {
-                // println!("{:?}, {:?}", action, distance);
+            for action in held_ability_actions.clone() {
+                println!("checking if {:?} is aimable", action);
                 if self.settings.aimable_buttons().contains(&action) {
                     some_held_action_aimable = true;
                 }
+            }
+
+            // Of the abilities with an action distance, check for the farthest distance.
+            let held_abilities_with_action_distance_set = held_ability_actions.into_iter()
+                                                                                    .filter(|action| self.get_ability_action_distance(action) != ActionDistance::None);
+            let mut chosen_distance =  0.0;
+            for (_action, distance) in held_abilities_with_action_distance_set.map(|action| (action.to_owned(), self.get_attack_circle_radius(self.get_ability_action_distance(&action)))) {
                 if distance > chosen_distance {
                     chosen_distance = distance;
                 }
             }
-            // println!("{:?}, {:?}", some_held_action_aimable, chosen_distance);
+            // println!("{:?},,, {:?}", some_held_action_aimable, chosen_distance);
             if chosen_distance == 0.0 {
                 // no held ability had a preset distance, use walking distance
                 chosen_distance = self.settings.controller_settings().walk_circle_radius_px();
@@ -150,9 +160,11 @@ impl ActionManager {
             if some_held_action_aimable && self.holding_aim {
                 let (new_x, new_y) = self.get_radial_location(chosen_distance, self.aiming_angle);
                 self.action_handler.move_mouse(new_x as f64, new_y as f64);
+                set_cursor = true;
             } else {
                 let (new_x, new_y) = self.get_radial_location(chosen_distance, self.walking_angle);
                 self.action_handler.move_mouse(new_x as f64, new_y as f64);
+                set_cursor = true;
             }
         }
         
@@ -160,14 +172,17 @@ impl ActionManager {
         if self.holding_aim && !self.holding_walk {
             let (new_x_pos, new_y_pos) = self.get_free_move_update(ctx);
             self.action_handler.move_mouse(new_x_pos, new_y_pos);
-        }
+            set_cursor = true;
+        } 
 
         // if moving!
-        if self.holding_walk && !self.holding_ability {
+        if self.holding_walk && !set_cursor {
             let (new_x, new_y) = self.get_radial_location(self.settings.controller_settings().walk_circle_radius_px(), self.walking_angle);
             self.action_handler.move_mouse(new_x as f64, new_y as f64);
+        }
+        if self.holding_walk {
             self.action_handler.handle_action(ActionType::Press, "LeftClick".to_string());
-        } else {
+        } else { // TODO: How does this work with held move skills? Might need to add "if not holding walk"
             self.action_handler.handle_action(ActionType::Release, "LeftClick".to_string());
         }
   
