@@ -3,8 +3,8 @@ use std::{thread, time, collections::HashMap};
 
 #[derive(PartialEq)]
 pub enum ActionType {
-    PRESS,
-    RELEASE,
+    Press,
+    Release,
 }
 
 pub struct ActionHandler {
@@ -134,28 +134,28 @@ impl ActionHandler {
         // Action handler tracks held mouse button state to avoid safely spamming events
         match mouse_button {
             Button::Left => {
-                if action == ActionType::PRESS && !self.left_mouse_held {
+                if action == ActionType::Press && !self.left_mouse_held {
                     self.left_mouse_held = true;
                     rdev_send_event(&EventType::ButtonPress(mouse_button))
-                } else if action == ActionType::RELEASE && self.left_mouse_held {
+                } else if action == ActionType::Release && self.left_mouse_held {
                     self.left_mouse_held = false;
                     rdev_send_event(&EventType::ButtonRelease(mouse_button))
                 }
             },
             Button::Middle => {
-                if action == ActionType::PRESS && !self.middle_mouse_held {
+                if action == ActionType::Press && !self.middle_mouse_held {
                     self.middle_mouse_held = true;
                     rdev_send_event(&EventType::ButtonPress(mouse_button))
-                } else if action == ActionType::RELEASE && self.middle_mouse_held {
+                } else if action == ActionType::Release && self.middle_mouse_held {
                     self.middle_mouse_held = false;
                     rdev_send_event(&EventType::ButtonRelease(mouse_button))
                 }
             },
             Button::Right => {
-                if action == ActionType::PRESS && !self.right_mouse_held {
+                if action == ActionType::Press && !self.right_mouse_held {
                     self.right_mouse_held = true;
                     rdev_send_event(&EventType::ButtonPress(mouse_button))
-                } else if action == ActionType::RELEASE && self.right_mouse_held {
+                } else if action == ActionType::Release && self.right_mouse_held {
                     self.right_mouse_held = false;
                     rdev_send_event(&EventType::ButtonRelease(mouse_button))
                 }
@@ -165,26 +165,25 @@ impl ActionHandler {
     }
 
     fn handle_keypress_action(&mut self, keypress: Key, action: ActionType, action_string: String) {
-        // KeyPress(Key) KeyRelease(Key)
-        if action == ActionType::PRESS {
+        if action == ActionType::Press {
             if !self.held_keys.contains_key(&keypress) {
                 rdev_send_event(&EventType::KeyPress(keypress));
                 self.held_keys.insert(keypress, action_string);
             }
-        } else if action == ActionType::RELEASE {
+        } else if action == ActionType::Release {
             if self.held_keys.contains_key(&keypress) {
                 rdev_send_event(&EventType::KeyRelease(keypress));
                 self.held_keys.remove(&keypress);
-
             }
         }
     }
+
     fn handle_action_with_modifier_key(&mut self, action: String, modifier: String, delay_ms: u64) {
-        self.handle_action(ActionType::PRESS, modifier.clone());
+        self.handle_action(ActionType::Press, modifier.to_owned());
         thread::sleep(time::Duration::from_millis(delay_ms));
 
-        self.handle_action(ActionType::PRESS, action);
-        self.handle_action(ActionType::RELEASE, modifier.clone());
+        self.handle_action(ActionType::Press, action);
+        self.handle_action(ActionType::Release, modifier);
     }
 
     pub fn is_ability_key_held(&self) -> bool {
@@ -213,18 +212,15 @@ impl ActionHandler {
         if self.held_keys.contains_key(&Key::KeyE) {held_ability_actions.push("e".to_owned());}
         if self.held_keys.contains_key(&Key::KeyR) {held_ability_actions.push("r".to_owned());}
         if self.held_keys.contains_key(&Key::KeyT) {held_ability_actions.push("t".to_owned());}
-        return held_ability_actions;
+        held_ability_actions
     }
 }
 
 fn rdev_send_event(event_type: &EventType) {
-    //let delay = time::Duration::from_millis(20);
     match simulate(event_type) {
         Ok(()) => (),
         Err(SimulateError) => {
             println!("We could not send {:?}", event_type);
         }
     }
-    // Let the OS catchup (at least MacOS)
-    //thread::sleep(delay);
 }

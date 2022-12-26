@@ -15,7 +15,6 @@ impl ControllerButton {
         self.just_pressed = just_pressed && !self.held;
         self.just_unpressed = !just_pressed && self.held;
         self.held = just_pressed;
-        //println!("button change event {:?}", self.held);
     }
 }
 
@@ -31,10 +30,10 @@ impl TriggerButton {
     fn set_trigger_threshold(&mut self, value: f32) {
         self.trigger_threshold = value;
     }
+
     fn changed_button_event(&mut self, value: f32) {
         self.button.just_pressed = value >= self.trigger_threshold && self.hold_amount < self.trigger_threshold;
         self.button.just_unpressed = value < self.trigger_threshold && self.hold_amount >= self.trigger_threshold;
-        // if self.button.held != self.button.just_pressed {println!("trigger button change event | old: {:?} | new: {:?} | value: {:?}", self.button.held, self.button.just_pressed, value);}
         self.button.held = self.button.just_pressed;
         self.hold_amount = value;
     }
@@ -73,11 +72,11 @@ impl AnalogStick {
 
     fn compute_joystick_deadzone(&self, value: f32) -> f32 {
         if value > self.deadzone {
-            return (value - self.deadzone) / (1.0 - self.deadzone);
+            (value - self.deadzone) / (1.0 - self.deadzone)
         } else if value < -self.deadzone {
-            return (value + self.deadzone) / (1.0 - self.deadzone);
+            (value + self.deadzone) / (1.0 - self.deadzone)
         } else { 
-            return 0.0 as f32; 
+            0.0_f32
         }
     }
 
@@ -141,11 +140,11 @@ impl ControllerState {
     }
 
     pub fn get_left_analog_stick(&self) -> AnalogStick {
-        self.left_analog.analog_stick().clone()
+        self.left_analog.analog_stick()
     }
 
     pub fn get_right_analog_stick(&self) -> AnalogStick {
-        self.right_analog.analog_stick().clone()
+        self.right_analog.analog_stick()
     }
 
 }
@@ -177,8 +176,7 @@ pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f3
     gamepad_manager.controller_state.left_analog.analog_stick.set_joystick_deadzone(analog_deadzone);
     gamepad_manager.controller_state.right_analog.analog_stick.set_joystick_deadzone(analog_deadzone);
 
-    
-    return gamepad_manager;
+    gamepad_manager
 }
 
 impl GamepadManager {
@@ -239,16 +237,13 @@ impl GamepadManager {
             let gamepad_id = self.gamepad_id.unwrap();
             while let Some(Event { id, event, time: _ }) = self.gilrs_context.next_event() {
                 if id == gamepad_id {
-                    match event {
-                        EventType::Disconnected => {
-                            was_disconnected = self.disconect_connected_controller();
-                        },
-                        _ => ()
+                    if event == EventType::Disconnected {
+                        was_disconnected = self.disconect_connected_controller();
                     }
                 }
             }
         }
-        return was_disconnected;
+        was_disconnected
     }
     
     pub fn force_check_new_controllers(&mut self) {
@@ -294,6 +289,4 @@ impl GamepadManager {
             false
         }
     }
-
-    // pub fn controller_state(&mut self) -> &mut ControllerState {&mut self.controller_state}
 }

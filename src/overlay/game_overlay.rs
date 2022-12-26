@@ -24,7 +24,7 @@ struct OverlayImages {
     button_x: RetainedImage,
     button_y: RetainedImage,
 
-    button_l3: RetainedImage,
+    //button_l3: RetainedImage,
     button_r3: RetainedImage,
 }
 
@@ -42,7 +42,7 @@ impl Default for OverlayImages {
             button_x: RetainedImage::from_image_bytes("button_x.png", include_bytes!("..\\img\\button_x.png")).unwrap(),
             button_y: RetainedImage::from_image_bytes("button_y.png", include_bytes!("..\\img\\button_y.png")).unwrap(),
 
-            button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("..\\img\\button_l3.png")).unwrap(),
+            //button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("..\\img\\button_l3.png")).unwrap(),
             button_r3: RetainedImage::from_image_bytes("button_r3.png", include_bytes!("..\\img\\button_r3.png")).unwrap(),
         }
     }
@@ -171,7 +171,7 @@ impl GameOverlay {
                 self.gamepad_manager.force_check_new_controllers();
                 let connected_controllers = self.gamepad_manager.get_connected_controllers();
                 println!("Connected controller count: {:?}", connected_controllers.len());
-                if connected_controllers.len() > 0 {
+                if !connected_controllers.is_empty() {
                     self.gamepad_manager.connect_to_controller(connected_controllers, 0);
                 }
             }
@@ -312,11 +312,11 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
 }
 
 pub fn start_overlay(overlay_settings: OverlaySettings, controller_settings: ControllerSettings, gamepad_manager: GamepadManager, game_action_handler: ActionManager) {
-    let screen_width = overlay_settings.screen_width() as f32;
-    let screen_height = overlay_settings.screen_height() as f32;
+    let screen_width = overlay_settings.screen_width();
+    let screen_height = overlay_settings.screen_height();
     let game_overlay = GameOverlay{
         overlay_settings: overlay_settings,
-        window_rect: Rect::from_two_pos(Pos2 { x: 0.0, y: 0.0 }, Pos2 {x: screen_width as f32, y: screen_height as f32 }),
+        window_rect: Rect::from_two_pos(Pos2 { x: 0.0, y: 0.0 }, Pos2 {x: screen_width, y: screen_height}),
         overlay_images: OverlayImages::default(),
         controller_settings: controller_settings,
         gamepad_manager: gamepad_manager,

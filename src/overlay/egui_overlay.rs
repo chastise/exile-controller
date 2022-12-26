@@ -1,5 +1,4 @@
 use egui_backend::{GfxBackend, UserApp, WindowBackend};
-use egui_window_glfw_passthrough;
 use crate::overlay::egui_render_wgpu::egui_render_wgpu;
 
 /*

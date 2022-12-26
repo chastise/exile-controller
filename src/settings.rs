@@ -50,8 +50,6 @@ pub struct ApplicationSettings {
     controller_settings: ControllerSettings,
 }
 
-
-
 impl ApplicationSettings {
     pub fn overlay_settings(&self) -> OverlaySettings {self.overlay_settings.clone()}
     pub fn button_mapping_settings(&self) -> HashMap<String, String> {self.button_mapping_settings.clone()}
@@ -135,7 +133,6 @@ pub fn load_settings() -> ApplicationSettings {
             far_circle_radius_px: settings.get_int("controller.far_circle_radius_px").unwrap() as f32,
             free_mouse_sensitivity_px: settings.get_int("controller.free_mouse_sensitivity_px").unwrap() as f32,
         },
-
     }
 }
 
