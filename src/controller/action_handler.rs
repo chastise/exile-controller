@@ -1,8 +1,6 @@
 use rdev::{simulate, Button, EventType, Key, SimulateError};
 use std::{thread, time, collections::HashMap};
 
-use enigo::Enigo;
-
 #[derive(PartialEq)]
 pub enum ActionType {
     PRESS,
@@ -187,13 +185,6 @@ impl ActionHandler {
 
         self.handle_action(ActionType::PRESS, action);
         self.handle_action(ActionType::RELEASE, modifier.clone());
-    }
-
-    
-
-    pub fn current_mouse_position(&self) -> (f32, f32) {
-        let (x, y) = Enigo::mouse_location();
-        (x as f32, y as f32)
     }
 
     pub fn is_ability_key_held(&self) -> bool {

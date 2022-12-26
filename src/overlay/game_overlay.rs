@@ -29,6 +29,7 @@ struct OverlayImages {
 }
 
 impl Default for OverlayImages {
+    #[cfg(target_os = "windows")]
     fn default() -> Self {
         Self {
             button_d_up: RetainedImage::from_image_bytes("dpad_up.png", include_bytes!("..\\img\\dpad_up.png")).unwrap(),
@@ -43,6 +44,24 @@ impl Default for OverlayImages {
 
             button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("..\\img\\button_l3.png")).unwrap(),
             button_r3: RetainedImage::from_image_bytes("button_r3.png", include_bytes!("..\\img\\button_r3.png")).unwrap(),
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    fn default() -> Self {
+        Self {
+            button_d_up: RetainedImage::from_image_bytes("dpad_up.png", include_bytes!("../img/dpad_up.png")).unwrap(),
+            button_d_down: RetainedImage::from_image_bytes("dpad_down.png", include_bytes!("../img/dpad_down.png")).unwrap(),
+            button_d_left: RetainedImage::from_image_bytes("dpad_left.png", include_bytes!("../img/dpad_left.png")).unwrap(),
+            button_d_right: RetainedImage::from_image_bytes("dpad_right.png", include_bytes!("../img/dpad_right.png")).unwrap(),
+
+            button_a: RetainedImage::from_image_bytes("button_a.png",  include_bytes!("../img/button_a.png")).unwrap(),
+            button_b: RetainedImage::from_image_bytes("button_b.png", include_bytes!("../img/button_b.png")).unwrap(),
+            button_x: RetainedImage::from_image_bytes("button_x.png", include_bytes!("../img/button_x.png")).unwrap(),
+            button_y: RetainedImage::from_image_bytes("button_y.png", include_bytes!("../img/button_y.png")).unwrap(),
+
+            button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("../img/button_l3.png")).unwrap(),
+            button_r3: RetainedImage::from_image_bytes("button_r3.png", include_bytes!("../img/button_r3.png")).unwrap(),
         }
     }
 }
@@ -230,12 +249,12 @@ impl GameOverlay {
 
     // }
 
-    fn handle_controller_input_loop (&mut self) {
+    fn handle_controller_input_loop (&mut self, ctx: &Context) {
         self.gamepad_manager.read_latest_input();
         self.game_action_handler.process_input_buttons(self.gamepad_manager.controller_state.get_all_buttons());
         self.game_action_handler.process_input_analogs(self.gamepad_manager.controller_state.get_left_analog_stick(), 
                                             self.gamepad_manager.controller_state.get_right_analog_stick());
-        self.game_action_handler.handle_character_actions();
+        self.game_action_handler.handle_character_actions(ctx);
     }
 }
 
@@ -263,7 +282,7 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
                 self.paint_crosshair(egui_context);
             }
 
-            self.handle_controller_input_loop();
+            self.handle_controller_input_loop(egui_context);
             if !self.gamepad_manager.is_controller_connected() {
                 self.game_input_started = false;
                 self.remote_open = true;
