@@ -1,9 +1,10 @@
+#![windows_subsystem = "windows"]
+
 mod settings;
 mod controller;
 use controller::{input, action_manager};
 mod overlay;
 use overlay::game_overlay;
-
 
 fn main() {
     println!("Loading settings.toml...");
