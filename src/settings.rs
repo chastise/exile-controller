@@ -44,6 +44,7 @@ impl ControllerSettings {
 pub struct ApplicationSettings {
     overlay_settings: OverlaySettings,
     button_mapping_settings: HashMap<String, String>,
+    ability_mapping_settings: HashMap<String, String>,
     aimable_buttons: Vec<String>,
     action_distances: HashMap<String, String>,
     controller_settings: ControllerSettings,
@@ -54,6 +55,7 @@ pub struct ApplicationSettings {
 impl ApplicationSettings {
     pub fn overlay_settings(&self) -> OverlaySettings {self.overlay_settings.clone()}
     pub fn button_mapping_settings(&self) -> HashMap<String, String> {self.button_mapping_settings.clone()}
+    pub fn ability_mapping_settings(&self) -> HashMap<String, String> {self.ability_mapping_settings.clone()}
     pub fn aimable_buttons(&self) -> Vec<String> {self.aimable_buttons.clone()}
     pub fn action_distances(&self) -> HashMap<String, String> {self.action_distances.clone()}
     pub fn controller_settings(&self) -> ControllerSettings {self.controller_settings.clone()}
@@ -94,6 +96,18 @@ pub fn load_settings() -> ApplicationSettings {
             map.insert("bumper_right".to_owned(), settings.get_string("button_mapping.bumper_right").unwrap());
             map.insert("trigger_left".to_owned(), settings.get_string("button_mapping.trigger_left").unwrap());
             map.insert("trigger_right".to_owned(), settings.get_string("button_mapping.trigger_right").unwrap());
+            map
+        },
+        ability_mapping_settings: {
+            let mut map = HashMap::<String, String>::new();
+            map.insert(settings.get_string("button_mapping.a").unwrap(), "a".to_owned());
+            map.insert(settings.get_string("button_mapping.b").unwrap(), "b".to_owned());
+            map.insert(settings.get_string("button_mapping.x").unwrap(), "x".to_owned());
+            map.insert(settings.get_string("button_mapping.y").unwrap(), "y".to_owned());
+            map.insert(settings.get_string("button_mapping.bumper_left").unwrap(), "bumper_left".to_owned());
+            map.insert(settings.get_string("button_mapping.bumper_right").unwrap(), "bumper_right".to_owned());
+            map.insert(settings.get_string("button_mapping.trigger_left").unwrap(), "trigger_left".to_owned());
+            map.insert(settings.get_string("button_mapping.trigger_right").unwrap(), "trigger_right".to_owned());
             map
         },
         aimable_buttons: {

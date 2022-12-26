@@ -4,6 +4,8 @@ screen_width = 1920
 show_crosshair = true
 show_buttons = true
 
+# You must set you left-click ability in PoE to movement.
+# You must also let the game use default ability mappings for QWERT
 [button_mapping]
 x = "q"
 y = "r"
@@ -25,7 +27,7 @@ trigger_right = "AltLeftClick"
 # Enables move-aiming with the right stick
 # Bumpers, triggers and abxy only!
 [aimable_buttons]
-aimable = ["bumper_right", "y", "a"]
+aimable = ["bumper_right"]
 
 # Sets action distance from character when pushed while moving or move-aiming. 
 # Ideal for setting movement skill distances, totem drop distances, etc
@@ -39,7 +41,7 @@ a = "mid"
 
 [controller]
 walk_circle_radius_px = "110"
-close_circle_radius_px = "110"
+close_circle_radius_px = "100"
 mid_circle_radius_px = "250"
 far_circle_radius_px = "380"
 character_x_offset_px = "0"

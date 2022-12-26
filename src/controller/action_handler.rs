@@ -1,6 +1,5 @@
-use std::{thread, time, collections::HashMap, ops::Index};
-
 use rdev::{simulate, Button, EventType, Key, SimulateError};
+use std::{thread, time, collections::HashMap};
 
 use enigo::Enigo;
 
@@ -14,8 +13,7 @@ pub struct ActionHandler {
     left_mouse_held: bool,
     middle_mouse_held: bool,
     right_mouse_held: bool,
-    //held_mouse_buttons: HashMap::<Button, bool>,
-    held_keys: Vec::<Key>,
+    held_keys: HashMap<Key, String>
 }
 
 impl Default for ActionHandler {
@@ -24,8 +22,7 @@ impl Default for ActionHandler {
             left_mouse_held: false,
             middle_mouse_held: false,
             right_mouse_held: false,
-            //held_mouse_buttons: HashMap::from([(Button::Left, false), (Button::Middle, false), (Button::Right, false)]),
-            held_keys: Vec::<Key>::with_capacity(20),
+            held_keys: HashMap::<Key, String>::with_capacity(20),
         }
     }
 }
@@ -34,13 +31,13 @@ impl ActionHandler {
     pub fn handle_action(&mut self, action_type: ActionType, action: String) {
         match action.as_str() {
             "AltLeftClick" => { 
-                // TODO when we're ready to implement loot keys
+                self.handle_action_with_modifier_key("LeftClick".to_owned(), "Alt".to_owned(), 0);
             },
             "LeftClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
             "MiddleClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
             "RightClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
             &_ => { // If it's not a mouse or special case, assume it's a key press
-                self.handle_keypress_action(self.match_key_str_to_key(action.to_lowercase().as_str()), action_type);
+                self.handle_keypress_action(self.match_key_str_to_key(action.to_lowercase().as_str()), action_type, action);
             }
         }
     }
@@ -169,31 +166,63 @@ impl ActionHandler {
         }
     }
 
-    fn handle_keypress_action(&mut self, keypress: Key, action: ActionType) {
+    fn handle_keypress_action(&mut self, keypress: Key, action: ActionType, action_string: String) {
         // KeyPress(Key) KeyRelease(Key)
         if action == ActionType::PRESS {
-            if !self.held_keys.contains(&keypress) {
+            if !self.held_keys.contains_key(&keypress) {
                 rdev_send_event(&EventType::KeyPress(keypress));
-                self.held_keys.push(keypress);
+                self.held_keys.insert(keypress, action_string);
             }
         } else if action == ActionType::RELEASE {
-            if self.held_keys.contains(&keypress) {
+            if self.held_keys.contains_key(&keypress) {
                 rdev_send_event(&EventType::KeyRelease(keypress));
-                for (index, _val) in self.held_keys.iter().enumerate() {
-                    if self.held_keys.get(index).unwrap() == &keypress {
-                        self.held_keys.swap_remove(index);
-                        break;
-                    }
-                }
-                
+                self.held_keys.remove(&keypress);
+
             }
         }
-
     }
+    fn handle_action_with_modifier_key(&mut self, action: String, modifier: String, delay_ms: u64) {
+        self.handle_action(ActionType::PRESS, modifier.clone());
+        thread::sleep(time::Duration::from_millis(delay_ms));
+
+        self.handle_action(ActionType::PRESS, action);
+        self.handle_action(ActionType::RELEASE, modifier.clone());
+    }
+
+    
 
     pub fn current_mouse_position(&self) -> (f32, f32) {
         let (x, y) = Enigo::mouse_location();
         (x as f32, y as f32)
+    }
+
+    pub fn is_ability_key_held(&self) -> bool {
+        let mut is_holding = false;
+        if self.middle_mouse_held || self.right_mouse_held {
+            is_holding = true;
+        } 
+        for key in self.held_keys.keys() {
+            match key {
+                Key::KeyQ => {is_holding = true;},
+                Key::KeyW => {is_holding = true;},
+                Key::KeyE => {is_holding = true;},
+                Key::KeyR => {is_holding = true;},
+                Key::KeyT => {is_holding = true;},
+                _ => (),
+            }
+        }
+        is_holding
+    }
+    pub fn get_held_ability_actions(&self) -> Vec<String> {
+        let mut held_ability_actions = Vec::<String>::new();
+        if self.middle_mouse_held {held_ability_actions.push("MiddleClick".to_owned());}
+        if self.right_mouse_held {held_ability_actions.push("RightClick".to_owned());}
+        if self.held_keys.contains_key(&Key::KeyQ) {held_ability_actions.push("q".to_owned());}
+        if self.held_keys.contains_key(&Key::KeyW) {held_ability_actions.push("w".to_owned());}
+        if self.held_keys.contains_key(&Key::KeyE) {held_ability_actions.push("e".to_owned());}
+        if self.held_keys.contains_key(&Key::KeyR) {held_ability_actions.push("r".to_owned());}
+        if self.held_keys.contains_key(&Key::KeyT) {held_ability_actions.push("t".to_owned());}
+        return held_ability_actions;
     }
 }
 

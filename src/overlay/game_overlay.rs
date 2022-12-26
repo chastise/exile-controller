@@ -303,11 +303,10 @@ pub fn start_overlay(overlay_settings: OverlaySettings, controller_settings: Con
         gamepad_manager: gamepad_manager,
         game_action_handler: game_action_handler,
         remote_open: true,
-        remote_pos: Pos2 { x: screen_width / 2.0 , y: screen_height / 4.0 },
+        remote_pos: Pos2 { x: screen_width / 2.0 , y: screen_height / 16.0 },
         game_input_started: false,
         controller_check_timer: Instant::now(),
     };
 
-    // TODO: Figure out how to pass screen width and height so the first frame isn't mysteriously 800x600
     egui_overlay::start_egui_overlay(game_overlay, screen_width as i32, screen_height as i32);
 }
