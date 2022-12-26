@@ -29,7 +29,7 @@ impl ActionHandler {
     pub fn handle_action(&mut self, action_type: ActionType, action: String) {
         match action.as_str() {
             "AltLeftClick" => { 
-                self.handle_action_with_modifier_key("LeftClick".to_owned(), "Alt".to_owned(), 0);
+                self.handle_action_with_modifier_key("LeftClick".to_owned(), "Alt".to_owned(), 20);
             },
             "LeftClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
             "MiddleClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
