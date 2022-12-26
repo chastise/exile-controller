@@ -129,16 +129,17 @@ impl GameOverlay {
     }
 
     fn paint_crosshair (&self, ctx: &Context) {
-        let crosshair_radius = 4.0;
-        let crosshair_position = Pos2 { x: (self.overlay_settings.screen_width() / 2.0) - self.controller_settings.character_x_offset_px(), 
-                                                y: (self.overlay_settings.screen_height() / 2.0) - self.controller_settings.character_y_offset_px() };
+        let crosshair_radius = 5.0;
+        // offset radius*2.0 because the paint area is radius * 4 across
+        let crosshair_position = Pos2 { x: (self.overlay_settings.screen_width() / 2.0) - self.controller_settings.character_x_offset_px() - crosshair_radius*2.0, 
+                                                y: (self.overlay_settings.screen_height() / 2.0) - self.controller_settings.character_y_offset_px() - crosshair_radius*2.0};
         egui_backend::egui::Area::new("crosshair")
                                         .movable(false)
                                         .fixed_pos(crosshair_position)
                                         .show(ctx,|ui| {
                                             let paint_size = Vec2::splat(crosshair_radius * 4.0);
                                             let (response, painter) = ui.allocate_painter(paint_size, egui::Sense::hover());
-                                            painter.circle_stroke( response.rect.center(), crosshair_radius,  egui::Stroke{width:1.5, color:egui::Color32::RED});
+                                            painter.circle_stroke( response.rect.center(), crosshair_radius,  egui::Stroke{width:2.0, color:egui::Color32::RED});
                                         });
     }
 
