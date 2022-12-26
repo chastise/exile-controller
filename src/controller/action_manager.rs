@@ -29,6 +29,7 @@ pub struct ActionManager {
     holding_aim: bool,
     aiming_angle: f32,
     aiming_stick_direction: Vec<f32>,
+    aiming_stick_pull_amount: f32,
     holding_ability: bool,
 }
 
@@ -43,6 +44,7 @@ impl ActionManager {
             holding_aim: false,
             aiming_angle: 0.0,
             aiming_stick_direction: vec![0.0, 0.0],
+            aiming_stick_pull_amount: 0.0,
             holding_ability: false,
         }
     }
@@ -86,8 +88,10 @@ impl ActionManager {
             self.holding_aim = true;
             self.aiming_angle = right_stick.stick_angle();
             self.aiming_stick_direction = right_stick.stick_direction();
-        }else {
+            self.aiming_stick_pull_amount = right_stick.joystick_pull_amount_smoothed();
+        } else {
             self.holding_aim = false;
+            self.aiming_stick_pull_amount = 0.0_f32;
         }
     }
 
@@ -206,7 +210,7 @@ impl ActionManager {
     }
 
     fn get_free_move_update(&self, ctx: &egui::Context) -> (f64, f64){
-        let screen_adjustment_x = self.aiming_stick_direction[0] * self.settings.controller_settings().free_mouse_sensitivity_px();
+        let screen_adjustment_x = self.aiming_stick_direction[0] * self.settings.controller_settings().free_mouse_sensitivity_px() ;
         let screen_adjustment_y = -1.0 * self.aiming_stick_direction[1] * self.settings.controller_settings().free_mouse_sensitivity_px();
         
         // There is a chance that there _is_ no mouse position.

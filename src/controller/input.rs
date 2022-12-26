@@ -92,6 +92,22 @@ impl AnalogStick {
         self.stick_x == 0.0 && self.stick_y == 0.0
     }
 
+    pub fn joystick_pull_amount_smoothed(&self) -> f32 {
+        // todo: Figure out how this feels in practice
+        if self.deadzone > 0.0 {
+            if self.deadzone < 0.5 {
+                0.5_f32
+            } else if self.deadzone < 0.9 {
+                self.deadzone * 1.25_f32 - 0.125_f32
+            } else {
+                1.0_f32
+            }
+        } else {
+            0.0_f32
+        }
+        
+    }
+
 }
 
 
