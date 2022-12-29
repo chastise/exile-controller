@@ -23,6 +23,9 @@ bytemuck = { version = "1" }
 wgpu = { version = "0.13", features = ["webgl"]}
 pollster = { version = "0.2" }
 
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
+
 [[bin]]
 name = "exile-controller"
 path = "src/main.rs"
