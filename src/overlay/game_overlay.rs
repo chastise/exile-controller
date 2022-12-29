@@ -19,12 +19,20 @@ struct OverlayImages {
     button_d_left: RetainedImage,
     button_d_right: RetainedImage,
 
-    button_a: RetainedImage,
-    button_b: RetainedImage,
-    button_x: RetainedImage,
-    button_y: RetainedImage,
+    button_face_down: RetainedImage,
+    button_face_right: RetainedImage,
+    button_face_left: RetainedImage,
+    button_face_up: RetainedImage,
 
-    //button_l3: RetainedImage,
+    button_bumper_left: RetainedImage,
+    button_bumper_right: RetainedImage,
+    button_trigger_left: RetainedImage,
+    button_trigger_right: RetainedImage,
+
+    left_stick: RetainedImage,
+    right_stick: RetainedImage,
+
+    button_l3: RetainedImage,
     button_r3: RetainedImage,
 }
 
@@ -37,12 +45,20 @@ impl Default for OverlayImages {
             button_d_left: RetainedImage::from_image_bytes("dpad_left.png", include_bytes!("..\\img\\dpad_left.png")).unwrap(),
             button_d_right: RetainedImage::from_image_bytes("dpad_right.png", include_bytes!("..\\img\\dpad_right.png")).unwrap(),
 
-            button_a: RetainedImage::from_image_bytes("button_a.png",  include_bytes!("..\\img\\button_a.png")).unwrap(),
-            button_b: RetainedImage::from_image_bytes("button_b.png", include_bytes!("..\\img\\button_b.png")).unwrap(),
-            button_x: RetainedImage::from_image_bytes("button_x.png", include_bytes!("..\\img\\button_x.png")).unwrap(),
-            button_y: RetainedImage::from_image_bytes("button_y.png", include_bytes!("..\\img\\button_y.png")).unwrap(),
+            button_face_down: RetainedImage::from_image_bytes("xb_button_a.png",  include_bytes!("..\\img\\xb_button_a.png")).unwrap(),
+            button_face_right: RetainedImage::from_image_bytes("xb_button_b.png", include_bytes!("..\\img\\xb_button_b.png")).unwrap(),
+            button_face_left: RetainedImage::from_image_bytes("xb_button_x.png", include_bytes!("..\\img\\xb_button_x.png")).unwrap(),
+            button_face_up: RetainedImage::from_image_bytes("xb_button_y.png", include_bytes!("..\\img\\xb_button_y.png")).unwrap(),
 
-            //button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("..\\img\\button_l3.png")).unwrap(),
+            button_bumper_left: RetainedImage::from_image_bytes("xbox_lb.png",  include_bytes!("..\\img\\xbox_lb.png")).unwrap(),
+            button_bumper_right: RetainedImage::from_image_bytes("xbox_rb.png", include_bytes!("..\\img\\xbox_rb.png")).unwrap(),
+            button_trigger_left: RetainedImage::from_image_bytes("xbox_lt.png", include_bytes!("..\\img\\xbox_lt.png")).unwrap(),
+            button_trigger_right: RetainedImage::from_image_bytes("xbox_rb.png", include_bytes!("..\\img\\xbox_rb.png")).unwrap(),
+
+            left_stick: RetainedImage::from_image_bytes("left_analog.png", include_bytes!("..\\img\\left_analog.png")).unwrap(),
+            right_stick: RetainedImage::from_image_bytes("right_analog.png", include_bytes!("..\\img\\right_analog.png")).unwrap(),
+
+            button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("..\\img\\button_l3.png")).unwrap(),
             button_r3: RetainedImage::from_image_bytes("button_r3.png", include_bytes!("..\\img\\button_r3.png")).unwrap(),
         }
     }
@@ -55,10 +71,18 @@ impl Default for OverlayImages {
             button_d_left: RetainedImage::from_image_bytes("dpad_left.png", include_bytes!("../img/dpad_left.png")).unwrap(),
             button_d_right: RetainedImage::from_image_bytes("dpad_right.png", include_bytes!("../img/dpad_right.png")).unwrap(),
 
-            button_a: RetainedImage::from_image_bytes("button_a.png",  include_bytes!("../img/button_a.png")).unwrap(),
-            button_b: RetainedImage::from_image_bytes("button_b.png", include_bytes!("../img/button_b.png")).unwrap(),
-            button_x: RetainedImage::from_image_bytes("button_x.png", include_bytes!("../img/button_x.png")).unwrap(),
-            button_y: RetainedImage::from_image_bytes("button_y.png", include_bytes!("../img/button_y.png")).unwrap(),
+            button_face_down: RetainedImage::from_image_bytes("xb_button_a.png",  include_bytes!("../img/xb_button_a.png")).unwrap(),
+            button_face_right: RetainedImage::from_image_bytes("xb_button_b.png", include_bytes!("../img/xb_button_b.png")).unwrap(),
+            button_face_left: RetainedImage::from_image_bytes("xb_button_x.png", include_bytes!("../img/xb_button_x.png")).unwrap(),
+            button_face_up: RetainedImage::from_image_bytes("xb_button_y.png", include_bytes!("../img/xb_button_y.png")).unwrap(),
+
+            button_bumper_left: RetainedImage::from_image_bytes("xbox_lb.png",  include_bytes!("../img/xbox_lb.png")).unwrap(),
+            button_bumper_right: RetainedImage::from_image_bytes("xbox_rb.png", include_bytes!("../img/xbox_rb.png")).unwrap(),
+            button_trigger_left: RetainedImage::from_image_bytes("xbox_lt.png", include_bytes!("../img/xbox_lt.png")).unwrap(),
+            button_trigger_right: RetainedImage::from_image_bytes("xbox_rb.png", include_bytes!("../img/xbox_rb.png")).unwrap(),
+
+            left_stick: RetainedImage::from_image_bytes("left_analog.png", include_bytes!("../img/left_analog.png")).unwrap(),
+            right_stick: RetainedImage::from_image_bytes("right_analog.png", include_bytes!("../img/right_analog.png")).unwrap(),
 
             button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("../img/button_l3.png")).unwrap(),
             button_r3: RetainedImage::from_image_bytes("button_r3.png", include_bytes!("../img/button_r3.png")).unwrap(),
@@ -90,26 +114,26 @@ impl GameOverlay {
                                     });
     }
 
-    fn place_abxy_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
-        let x_offset = 0.8215;
+    fn place_face_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
+        let x_offset = 0.828;
         let x_offset_offset = 0.029;
         let y_offset = 0.97;
-        self.place_overlay_image(ctx, &images.button_x, 
+        self.place_overlay_image(ctx, &images.button_face_left, 
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*3.0), y: self.overlay_settings.screen_height() * y_offset }, 
-                       "button_x");
-        self.place_overlay_image(ctx, &images.button_a, 
+                       "button_face_left");
+        self.place_overlay_image(ctx, &images.button_face_down, 
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
-                        "button_a");
-        self.place_overlay_image(ctx, &images.button_b, 
+                        "button_face_down");
+        self.place_overlay_image(ctx, &images.button_face_right, 
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
-                        "button_b");
-        self.place_overlay_image(ctx, &images.button_y, 
+                        "button_face_right");
+        self.place_overlay_image(ctx, &images.button_face_up, 
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset },
-                        "button_y");
+                        "button_face_up");
     }
 
     fn place_flask_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
-        let x_offset = 0.26;
+        let x_offset = 0.2615;
         let x_offset_offset = 0.0242;
         let y_offset = 0.97;
         self.place_overlay_image(ctx, &images.button_d_left, 
@@ -127,6 +151,21 @@ impl GameOverlay {
         self.place_overlay_image(ctx, &images.button_r3, 
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset },
                         "button_r3");
+    }
+
+    fn place_mouse_button_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
+        let x_offset = 0.8585;
+        let x_offset_offset = 0.029;
+        let y_offset = 0.909;
+        self.place_overlay_image(ctx, &images.left_stick, 
+            Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
+            "left_stick");
+        self.place_overlay_image(ctx, &images.button_bumper_right, 
+                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                       "button_bumper_right");
+        self.place_overlay_image(ctx, &images.button_bumper_left, 
+                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset }, 
+                        "button_bumper_left");
     }
 
     fn paint_crosshair (&self, ctx: &Context) {
@@ -278,7 +317,8 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
         if self.game_input_started {
             if self.overlay_settings.show_buttons() {
                 self.place_flask_overlay_images(egui_context, &self.overlay_images);
-                self.place_abxy_overlay_images(egui_context, &self.overlay_images);
+                self.place_face_overlay_images(egui_context, &self.overlay_images);
+                self.place_mouse_button_overlay_images(egui_context, &self.overlay_images);
             }
 
             if self.overlay_settings.show_crosshair() {

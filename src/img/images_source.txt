@@ -1,1 +1,3 @@
-Some icons sourced from https://icons8.com
+Icons sourced from https://opengameart.org/content/free-controller-prompts-xbox-playstation-switch-pc
+
+Created by Jeremy Statz, at Kittehface Software ( http://kittehface.com ) and lightly modified for this app.
