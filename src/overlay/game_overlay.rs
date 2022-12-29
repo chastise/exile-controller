@@ -50,10 +50,10 @@ impl Default for OverlayImages {
             button_face_left: RetainedImage::from_image_bytes("xb_button_x.png", include_bytes!("..\\img\\xb_button_x.png")).unwrap(),
             button_face_up: RetainedImage::from_image_bytes("xb_button_y.png", include_bytes!("..\\img\\xb_button_y.png")).unwrap(),
 
-            button_bumper_left: RetainedImage::from_image_bytes("xbox_lb.png",  include_bytes!("..\\img\\xbox_lb.png")).unwrap(),
-            button_bumper_right: RetainedImage::from_image_bytes("xbox_rb.png", include_bytes!("..\\img\\xbox_rb.png")).unwrap(),
-            button_trigger_left: RetainedImage::from_image_bytes("xbox_lt.png", include_bytes!("..\\img\\xbox_lt.png")).unwrap(),
-            button_trigger_right: RetainedImage::from_image_bytes("xbox_rb.png", include_bytes!("..\\img\\xbox_rb.png")).unwrap(),
+            button_bumper_left: RetainedImage::from_image_bytes("xb_lb.png",  include_bytes!("..\\img\\xb_lb.png")).unwrap(),
+            button_bumper_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("..\\img\\xb_rb.png")).unwrap(),
+            button_trigger_left: RetainedImage::from_image_bytes("xb_lt.png", include_bytes!("..\\img\\xb_lt.png")).unwrap(),
+            button_trigger_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("..\\img\\xb_rb.png")).unwrap(),
 
             left_stick: RetainedImage::from_image_bytes("left_analog.png", include_bytes!("..\\img\\left_analog.png")).unwrap(),
             right_stick: RetainedImage::from_image_bytes("right_analog.png", include_bytes!("..\\img\\right_analog.png")).unwrap(),
@@ -76,10 +76,10 @@ impl Default for OverlayImages {
             button_face_left: RetainedImage::from_image_bytes("xb_button_x.png", include_bytes!("../img/xb_button_x.png")).unwrap(),
             button_face_up: RetainedImage::from_image_bytes("xb_button_y.png", include_bytes!("../img/xb_button_y.png")).unwrap(),
 
-            button_bumper_left: RetainedImage::from_image_bytes("xbox_lb.png",  include_bytes!("../img/xbox_lb.png")).unwrap(),
-            button_bumper_right: RetainedImage::from_image_bytes("xbox_rb.png", include_bytes!("../img/xbox_rb.png")).unwrap(),
-            button_trigger_left: RetainedImage::from_image_bytes("xbox_lt.png", include_bytes!("../img/xbox_lt.png")).unwrap(),
-            button_trigger_right: RetainedImage::from_image_bytes("xbox_rb.png", include_bytes!("../img/xbox_rb.png")).unwrap(),
+            button_bumper_left: RetainedImage::from_image_bytes("xb_lb.png",  include_bytes!("../img/xb_lb.png")).unwrap(),
+            button_bumper_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("../img/xb_rb.png")).unwrap(),
+            button_trigger_left: RetainedImage::from_image_bytes("xb_lt.png", include_bytes!("../img/xb_lt.png")).unwrap(),
+            button_trigger_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("../img/xb_rb.png")).unwrap(),
 
             left_stick: RetainedImage::from_image_bytes("left_analog.png", include_bytes!("../img/left_analog.png")).unwrap(),
             right_stick: RetainedImage::from_image_bytes("right_analog.png", include_bytes!("../img/right_analog.png")).unwrap(),
