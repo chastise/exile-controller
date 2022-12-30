@@ -26,13 +26,13 @@ struct OverlayImages {
 
     button_bumper_left: RetainedImage,
     button_bumper_right: RetainedImage,
-    button_trigger_left: RetainedImage,
-    button_trigger_right: RetainedImage,
+    // button_trigger_left: RetainedImage,
+    // button_trigger_right: RetainedImage,
 
     left_stick: RetainedImage,
-    right_stick: RetainedImage,
+    // right_stick: RetainedImage,
 
-    button_l3: RetainedImage,
+    // button_l3: RetainedImage,
     button_r3: RetainedImage,
 }
 
@@ -52,13 +52,13 @@ impl Default for OverlayImages {
 
             button_bumper_left: RetainedImage::from_image_bytes("xb_lb.png",  include_bytes!("..\\img\\xb_lb.png")).unwrap(),
             button_bumper_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("..\\img\\xb_rb.png")).unwrap(),
-            button_trigger_left: RetainedImage::from_image_bytes("xb_lt.png", include_bytes!("..\\img\\xb_lt.png")).unwrap(),
-            button_trigger_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("..\\img\\xb_rb.png")).unwrap(),
+            // button_trigger_left: RetainedImage::from_image_bytes("xb_lt.png", include_bytes!("..\\img\\xb_lt.png")).unwrap(),
+            // button_trigger_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("..\\img\\xb_rb.png")).unwrap(),
 
             left_stick: RetainedImage::from_image_bytes("left_analog.png", include_bytes!("..\\img\\left_analog.png")).unwrap(),
-            right_stick: RetainedImage::from_image_bytes("right_analog.png", include_bytes!("..\\img\\right_analog.png")).unwrap(),
+            // right_stick: RetainedImage::from_image_bytes("right_analog.png", include_bytes!("..\\img\\right_analog.png")).unwrap(),
 
-            button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("..\\img\\button_l3.png")).unwrap(),
+            // button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("..\\img\\button_l3.png")).unwrap(),
             button_r3: RetainedImage::from_image_bytes("button_r3.png", include_bytes!("..\\img\\button_r3.png")).unwrap(),
         }
     }
@@ -78,13 +78,13 @@ impl Default for OverlayImages {
 
             button_bumper_left: RetainedImage::from_image_bytes("xb_lb.png",  include_bytes!("../img/xb_lb.png")).unwrap(),
             button_bumper_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("../img/xb_rb.png")).unwrap(),
-            button_trigger_left: RetainedImage::from_image_bytes("xb_lt.png", include_bytes!("../img/xb_lt.png")).unwrap(),
-            button_trigger_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("../img/xb_rb.png")).unwrap(),
+            // button_trigger_left: RetainedImage::from_image_bytes("xb_lt.png", include_bytes!("../img/xb_lt.png")).unwrap(),
+            // button_trigger_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("../img/xb_rb.png")).unwrap(),
 
             left_stick: RetainedImage::from_image_bytes("left_analog.png", include_bytes!("../img/left_analog.png")).unwrap(),
-            right_stick: RetainedImage::from_image_bytes("right_analog.png", include_bytes!("../img/right_analog.png")).unwrap(),
+            // right_stick: RetainedImage::from_image_bytes("right_analog.png", include_bytes!("../img/right_analog.png")).unwrap(),
 
-            button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("../img/button_l3.png")).unwrap(),
+            // button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("../img/button_l3.png")).unwrap(),
             button_r3: RetainedImage::from_image_bytes("button_r3.png", include_bytes!("../img/button_r3.png")).unwrap(),
         }
     }
