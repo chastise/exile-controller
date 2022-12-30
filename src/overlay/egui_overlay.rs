@@ -34,6 +34,7 @@ pub fn start_egui_overlay(app: impl UserApp<egui_window_glfw_passthrough::GlfwWi
     let wgpu_backend = egui_render_wgpu::WgpuBackend::new(&mut glfw_backend, Default::default());
 
     glfw_backend.window.set_icon_from_pixels(vec![load_pixel_icon()]);
+    glfw_backend.window.set_title("Exile Controller");
     glfw_backend.window.set_size(screen_width, screen_height);
     glfw_backend.run_event_loop(wgpu_backend, app);
 }
