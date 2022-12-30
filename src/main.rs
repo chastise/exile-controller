@@ -1,4 +1,5 @@
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
+// ^ Only enable this when building a release on windows
 
 mod settings;
 mod controller;
