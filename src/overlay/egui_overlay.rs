@@ -1,6 +1,5 @@
 use egui_backend::{GfxBackend, UserApp, WindowBackend};
 use crate::overlay::egui_render_wgpu::egui_render_wgpu;
-use std::path::Path;
 use egui_window_glfw_passthrough::glfw::PixelImage;
 
 /*
@@ -10,9 +9,13 @@ Reproduced here instead of importing because the egui_overlay crate relies on eg
 
 
 fn load_pixel_icon() -> PixelImage {
-    let icon_path = Path::new("src/img/icon.ico");
+    #[cfg(target_os = "windows")]
+    let icon_image: &[u8] = include_bytes!("..\\img\\icon.ico");
 
-    let img = image::open(icon_path).unwrap();
+    #[cfg(target_os = "linux")]
+    let icon_image: &[u8] = include_bytes!("../img/icon.ico");
+
+    let img = image::load_from_memory(icon_image).unwrap();
     let img_width = img.width();
     let img_height = img.height();
 
