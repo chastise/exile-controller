@@ -101,6 +101,7 @@ impl ActionManager {
         // Execute planned actions
         while let Some(planned_action) = self.planned_actions.pop() {
             let key_name = self.settings.button_mapping_settings().get(&planned_action.name).unwrap().to_string();
+            if key_name == "" {continue} // Empty string is how we set keymaps to not taking any action.
             // println!("{key_name}");
             if planned_action.just_pressed {
                 if planned_action.aimable {
