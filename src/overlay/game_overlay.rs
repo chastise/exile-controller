@@ -160,12 +160,12 @@ impl GameOverlay {
         self.place_overlay_image(ctx, &images.left_stick, 
             Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
             "left_stick");
-        self.place_overlay_image(ctx, &images.button_bumper_right, 
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
-                       "button_bumper_right");
         self.place_overlay_image(ctx, &images.button_bumper_left, 
+                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                       "button_bumper_left");
+        self.place_overlay_image(ctx, &images.button_bumper_right, 
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset }, 
-                        "button_bumper_left");
+                        "button_bumper_right");
     }
 
     fn paint_crosshair (&self, ctx: &Context) {

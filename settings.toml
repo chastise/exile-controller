@@ -4,7 +4,7 @@ screen_width = 1920
 show_crosshair = true
 show_buttons = true
 
-# You must set you left-click ability in PoE to movement.
+# You must bind your left-click ability in PoE to movement.
 # You must also let the game use default ability mappings for QWERT
 [button_mapping]
 x = "q"
