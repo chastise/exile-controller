@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use gilrs::{Gilrs, GamepadId, Axis, Button, Event, EventType};
 
@@ -165,6 +165,11 @@ impl ControllerState {
 
 }
 
+pub enum ControllerType {
+    Playstation,
+    Xbox,
+}
+
 pub struct GamepadManager {
     gilrs_context: Gilrs,
     gamepad_id: Option<GamepadId>,
@@ -296,6 +301,17 @@ impl GamepadManager {
         }
     }
 
+    pub fn get_connected_controller_map_name(&self) -> String {
+        if self.is_controller_connected() {
+            match self.gilrs_context.gamepad(self.gamepad_id.unwrap()).map_name() {
+                Some(mapper) => mapper.to_owned(),
+                None => "none".to_owned(),
+            }
+        } else {
+            "none".to_owned()
+        }
+    }
+
     pub fn disconect_connected_controller(&mut self) -> bool {
         if self.is_controller_connected() {
             self.gamepad_id = None;
@@ -303,6 +319,20 @@ impl GamepadManager {
         } else {
             println!("Failed to disconnect controller. Already disconnected?");
             false
+        }
+    }
+
+    pub fn determine_controller_type(&self) -> ControllerType {
+        // Matching on both of these gives us a greater chance at automatic
+        let map_name = self.get_connected_controller_map_name().to_lowercase();
+        let label = self.get_connected_controller_label().to_lowercase();
+        
+        // TODO(Samantha): This is a candidate for lazy static, but I'm not convinced that the compiler isn't optimizing this.
+        let playstation_names = HashSet::from(["ps5 controller", "ps4 controller", "ps3 controller", "ps2 controller", "ps1 controller", "playstation", "sony"]);
+        if playstation_names.contains(map_name.as_str()) || playstation_names.contains(label.as_str()) {
+            ControllerType::Playstation
+        } else {
+            ControllerType::Xbox
         }
     }
 }
