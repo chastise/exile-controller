@@ -103,8 +103,27 @@ struct GameOverlay {
     controller_check_timer: Instant,
 }
 
+fn is_poe_active() -> bool {
+    let active_window = active_win_pos_rs::get_active_window();
+        match active_window {
+            Ok(active_window) => {
+                if active_window.title.to_lowercase() == "Path of Exile".to_lowercase() {
+                    true
+                } else {
+                    false
+                }
+            },
+            Err(_) => false,
+        }
+}
+
 impl GameOverlay {
     fn place_overlay_image(&self, ctx: &Context, image: &RetainedImage, position: Pos2, id_source: &str) {
+        // Don't draw on the user's screen if they don't need the overlay
+        if !is_poe_active() {
+            return;
+        }
+
         egui_backend::egui::Area::new(id_source)
                                     .movable(false)
                                     .fixed_pos(position)
@@ -169,6 +188,11 @@ impl GameOverlay {
     }
 
     fn paint_crosshair (&self, ctx: &Context) {
+        // Don't draw on the user's screen if they don't need the overlay
+        if !is_poe_active() {
+            return;
+        }
+
         let crosshair_radius = 5.0;
         // offset radius*2.0 because the paint area is radius * 4 across
         let crosshair_position = Pos2 { x: (self.overlay_settings.screen_width() / 2.0) - self.controller_settings.character_x_offset_px() - crosshair_radius*2.0, 

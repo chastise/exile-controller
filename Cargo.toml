@@ -9,6 +9,7 @@ config = "0.13.3"
 serde = "1.0.151"
 gilrs = {version ="0.10.1", default-features = false, features = ["xinput"]}
 rdev = "0.5.2"
+active-win-pos-rs = "0.7.1"
 
 # egui
 egui = "0.19.0"
