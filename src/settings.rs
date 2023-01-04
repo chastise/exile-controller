@@ -8,6 +8,7 @@ pub struct OverlaySettings {
     screen_width: f32,
     show_crosshair: bool,
     show_buttons: bool,
+    always_show_overlay: bool,
 }
 
 impl OverlaySettings {
@@ -15,6 +16,7 @@ impl OverlaySettings {
     pub fn screen_width(&self) -> f32 {self.screen_width}
     pub fn show_crosshair(&self) -> bool {self.show_crosshair}
     pub fn show_buttons(&self) -> bool {self.show_buttons}
+    pub fn always_show_overlay(&self) -> bool {self.always_show_overlay}
 }
 
 #[derive(Clone)]
@@ -27,6 +29,7 @@ pub struct ControllerSettings {
     mid_circle_radius_px: f32,
     far_circle_radius_px: f32,
     free_mouse_sensitivity_px: f32,
+    controller_type: String,
 }
 
 impl ControllerSettings {
@@ -38,6 +41,7 @@ impl ControllerSettings {
     pub fn mid_circle_radius_px(&self) -> f32 {self.mid_circle_radius_px}
     pub fn far_circle_radius_px(&self) -> f32 {self.far_circle_radius_px}
     pub fn free_mouse_sensitivity_px(&self) -> f32 {self.free_mouse_sensitivity_px}
+    pub fn controller_type(&self) -> String {self.controller_type.clone()}
 }
 
 #[derive(Clone)]
@@ -68,12 +72,14 @@ pub fn load_settings() -> ApplicationSettings {
                     });
     let valid_ability_buttons = ["a", "b", "x", "y", "bumper_left", "bumper_right", "trigger_left", "trigger_right"].map(|x| x.to_string());
     let valid_ability_ranges = ["close", "mid", "far"].map(|x| x.to_string());
+    let valid_controller_types = ["auto", "xbox", "ps"].map(|x| x.to_string());
     ApplicationSettings {
         overlay_settings: OverlaySettings {
                             screen_height: settings.get_int("overlay.screen_height").unwrap() as f32,
                             screen_width: settings.get_int("overlay.screen_width").unwrap() as f32,
                             show_crosshair: settings.get_bool("overlay.show_crosshair").unwrap(),
                             show_buttons: settings.get_bool("overlay.show_buttons").unwrap(),
+                            always_show_overlay: settings.get_bool("overlay.always_show_overlay").unwrap(),
                         },
 
         button_mapping_settings: {
@@ -118,7 +124,7 @@ pub fn load_settings() -> ApplicationSettings {
                 if valid_ability_buttons.contains(&key) && valid_ability_ranges.contains(&value_str) {
                     map.insert(key, value_str);
                 } else {
-                    println!("invalid config");
+                    println!("invalid config"); // TODO: Needs to not just print in the release build
                 }
             }
             map
@@ -132,6 +138,11 @@ pub fn load_settings() -> ApplicationSettings {
             mid_circle_radius_px: settings.get_int("controller.mid_circle_radius_px").unwrap() as f32,
             far_circle_radius_px: settings.get_int("controller.far_circle_radius_px").unwrap() as f32,
             free_mouse_sensitivity_px: settings.get_int("controller.free_mouse_sensitivity_px").unwrap() as f32,
+            controller_type: if valid_controller_types.contains(&settings.get_string("controller.controller_type").unwrap().to_string()) {
+                settings.get_string("controller.controller_type").unwrap().to_string()
+            } else { 
+                panic!("invalid controller_type in config") 
+            }
         },
     }
 }

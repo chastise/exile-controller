@@ -100,7 +100,8 @@ struct GameOverlay {
 }
 
 impl GameOverlay {
-    fn is_poe_active() -> bool {
+    fn is_poe_active(&self) -> bool {
+        if self.overlay_settings.always_show_overlay() { return true; }
         let active_window = active_win_pos_rs::get_active_window();
             match active_window {
                 Ok(active_window) => {
@@ -231,6 +232,15 @@ impl GameOverlay {
                 println!("Connected controller count: {:?}", connected_controllers.len());
                 if !connected_controllers.is_empty() {
                     self.gamepad_manager.connect_to_controller(connected_controllers, 0);
+                    // Check the configs to see if we should overload the controller type.
+                    let configured_controller_type = self.controller_settings.controller_type();
+                    if configured_controller_type != "auto".to_owned() {
+                        match configured_controller_type.as_str() {
+                            "xbox" => self.gamepad_manager.force_set_controller_type(ControllerType::Xbox),
+                            "ps" => self.gamepad_manager.force_set_controller_type(ControllerType::Playstation),
+                            _ => ()
+                        }
+                    }
                 }
             }
             // Draw the remote
@@ -331,13 +341,13 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
         self.draw_remote(egui_context);
 
         if self.game_input_started {
-            if self.overlay_settings.show_buttons() && Self::is_poe_active() {
+            if self.overlay_settings.show_buttons() && self.is_poe_active() {
                 self.place_flask_overlay_images(egui_context, &self.overlay_images);
                 self.place_face_overlay_images(egui_context, &self.overlay_images);
                 self.place_mouse_button_overlay_images(egui_context, &self.overlay_images);
             }
 
-            if self.overlay_settings.show_crosshair() && Self::is_poe_active() {
+            if self.overlay_settings.show_crosshair() && self.is_poe_active() {
                 self.paint_crosshair(egui_context);
             }
 

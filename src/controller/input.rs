@@ -333,4 +333,8 @@ impl GamepadManager {
             ControllerType::Xbox
         }
     }
+
+    pub fn force_set_controller_type(&mut self, controller_type: ControllerType) {
+        self.controller_type = Some(controller_type);
+    }
 }

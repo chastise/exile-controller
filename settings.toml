@@ -3,6 +3,7 @@ screen_height = 1080
 screen_width = 1920
 show_crosshair = true
 show_buttons = true
+always_show_overlay = false
 
 # You must bind your left-click ability in PoE to movement.
 # You must also let the game use default ability mappings for QWERT
@@ -49,3 +50,4 @@ character_x_offset_px = "0"
 character_y_offset_px = "100"
 dead_zone_percentage = "0.17"
 free_mouse_sensitivity_px = "10"
+controller_type = "auto" # can be auto, xbox or ps
