@@ -114,16 +114,17 @@ impl GameOverlay {
         let x_offset = 0.828;
         let x_offset_offset = 0.029;
         let y_offset = 0.97;
-        self.place_overlay_image(ctx, &images.button_face_left.choose_image(self.gamepad_manager.determine_controller_type()),
+        let controller_type = self.gamepad_manager.controller_type;
+        self.place_overlay_image(ctx, &images.button_face_left.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*3.0), y: self.overlay_settings.screen_height() * y_offset }, 
                        "button_face_left");
-        self.place_overlay_image(ctx, &images.button_face_down.choose_image(self.gamepad_manager.determine_controller_type()),
+        self.place_overlay_image(ctx, &images.button_face_down.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
                         "button_face_down");
-        self.place_overlay_image(ctx, &images.button_face_right.choose_image(self.gamepad_manager.determine_controller_type()),
+        self.place_overlay_image(ctx, &images.button_face_right.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
                         "button_face_right");
-        self.place_overlay_image(ctx, &images.button_face_up.choose_image(self.gamepad_manager.determine_controller_type()),
+        self.place_overlay_image(ctx, &images.button_face_up.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset },
                         "button_face_up");
     }
@@ -132,19 +133,20 @@ impl GameOverlay {
         let x_offset = 0.2615;
         let x_offset_offset = 0.0242;
         let y_offset = 0.97;
-        self.place_overlay_image(ctx, &images.button_d_left.choose_image(self.gamepad_manager.determine_controller_type()),
+        let controller_type = self.gamepad_manager.controller_type;
+        self.place_overlay_image(ctx, &images.button_d_left.choose_image(controller_type),
             Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*4.0), y: self.overlay_settings.screen_height() * y_offset }, 
            "button_d_left");
-        self.place_overlay_image(ctx, &images.button_d_down.choose_image(self.gamepad_manager.determine_controller_type()),
+        self.place_overlay_image(ctx, &images.button_d_down.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*3.0), y: self.overlay_settings.screen_height() * y_offset }, 
                        "button_d_down");
-        self.place_overlay_image(ctx, &images.button_d_right.choose_image(self.gamepad_manager.determine_controller_type()),
+        self.place_overlay_image(ctx, &images.button_d_right.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
                         "button_d_right");
-        self.place_overlay_image(ctx, &images.button_d_up.choose_image(self.gamepad_manager.determine_controller_type()),
+        self.place_overlay_image(ctx, &images.button_d_up.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
                         "button_d_up");
-        self.place_overlay_image(ctx, &images.button_r3.choose_image(self.gamepad_manager.determine_controller_type()),
+        self.place_overlay_image(ctx, &images.button_r3.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset },
                         "button_r3");
     }
@@ -153,13 +155,14 @@ impl GameOverlay {
         let x_offset = 0.8585;
         let x_offset_offset = 0.029;
         let y_offset = 0.909;
-        self.place_overlay_image(ctx, &images.left_stick.choose_image(self.gamepad_manager.determine_controller_type()),
+        let controller_type = self.gamepad_manager.controller_type;
+        self.place_overlay_image(ctx, &images.left_stick.choose_image(controller_type),
             Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
             "left_stick");
-        self.place_overlay_image(ctx, &images.button_bumper_left.choose_image(self.gamepad_manager.determine_controller_type()),
+        self.place_overlay_image(ctx, &images.button_bumper_left.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
                        "button_bumper_left");
-        self.place_overlay_image(ctx, &images.button_bumper_right.choose_image(self.gamepad_manager.determine_controller_type()),
+        self.place_overlay_image(ctx, &images.button_bumper_right.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset }, 
                         "button_bumper_right");
     }
