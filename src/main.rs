@@ -1,5 +1,12 @@
-//#![windows_subsystem = "windows"]
-// ^ Only enable this when building a release on windows
+#![cfg_attr(
+    all(
+      target_os = "windows",
+      not(debug_assertions),
+    ),
+    windows_subsystem = "windows"
+  )]
+// ^ Disables terminal when building a release on windows
+
 
 mod settings;
 mod controller;
