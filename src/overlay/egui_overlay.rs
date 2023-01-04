@@ -2,6 +2,8 @@ use egui_backend::{GfxBackend, UserApp, WindowBackend};
 use crate::overlay::egui_render_wgpu::egui_render_wgpu;
 use egui_window_glfw_passthrough::glfw::PixelImage;
 
+use std::fs;
+
 /*
 Based on https://github.com/coderedart/egui_overlay 
 Reproduced here instead of importing because the egui_overlay crate relies on egui_render_wgpu, which needed to be fixed to allow properly drawing color images.
@@ -9,11 +11,7 @@ Reproduced here instead of importing because the egui_overlay crate relies on eg
 
 
 fn load_pixel_icon() -> PixelImage {
-    #[cfg(target_os = "windows")]
-    let icon_image: &[u8] = include_bytes!("..\\img\\icon.ico");
-
-    #[cfg(target_os = "linux")]
-    let icon_image: &[u8] = include_bytes!("../img/icon.ico");
+    let icon_image: &[u8] = &fs::read("img/icon.ico").unwrap();
 
     let img = image::load_from_memory(icon_image).unwrap();
     let img_width = img.width();

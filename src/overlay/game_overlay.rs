@@ -3,7 +3,7 @@ use std::process::exit;
 
 use super::egui_overlay;
 use crate::controller::action_manager::ActionManager;
-use crate::controller::input::GamepadManager;
+use crate::controller::input::{GamepadManager, ControllerType};
 use crate::settings::{OverlaySettings, ControllerSettings};
 
 use egui::{Vec2, Context, epaint, Color32};
@@ -12,80 +12,76 @@ use egui_backend::egui::{Rect, Pos2};
 use crate::overlay::egui_render_wgpu::egui_render_wgpu::WgpuBackend;
 use egui_extras::RetainedImage;
 
+use std::fs;
 
-struct OverlayImages {
-    button_d_up: RetainedImage,
-    button_d_down: RetainedImage,
-    button_d_left: RetainedImage,
-    button_d_right: RetainedImage,
-
-    button_face_down: RetainedImage,
-    button_face_right: RetainedImage,
-    button_face_left: RetainedImage,
-    button_face_up: RetainedImage,
-
-    button_bumper_left: RetainedImage,
-    button_bumper_right: RetainedImage,
-    // button_trigger_left: RetainedImage,
-    // button_trigger_right: RetainedImage,
-
-    left_stick: RetainedImage,
-    // right_stick: RetainedImage,
-
-    // button_l3: RetainedImage,
-    button_r3: RetainedImage,
+struct ControllerImage {
+    playstation: RetainedImage,
+    xbox: RetainedImage,
 }
 
-impl Default for OverlayImages {
-    #[cfg(target_os = "windows")]
-    fn default() -> Self {
+impl ControllerImage {
+    fn new(debug_name: &str, playstation: &str, xbox: &str) -> Self {
         Self {
-            button_d_up: RetainedImage::from_image_bytes("dpad_up.png", include_bytes!("..\\img\\dpad_up.png")).unwrap(),
-            button_d_down: RetainedImage::from_image_bytes("dpad_down.png", include_bytes!("..\\img\\dpad_down.png")).unwrap(),
-            button_d_left: RetainedImage::from_image_bytes("dpad_left.png", include_bytes!("..\\img\\dpad_left.png")).unwrap(),
-            button_d_right: RetainedImage::from_image_bytes("dpad_right.png", include_bytes!("..\\img\\dpad_right.png")).unwrap(),
-
-            button_face_down: RetainedImage::from_image_bytes("xb_button_a.png",  include_bytes!("..\\img\\xb_button_a.png")).unwrap(),
-            button_face_right: RetainedImage::from_image_bytes("xb_button_b.png", include_bytes!("..\\img\\xb_button_b.png")).unwrap(),
-            button_face_left: RetainedImage::from_image_bytes("xb_button_x.png", include_bytes!("..\\img\\xb_button_x.png")).unwrap(),
-            button_face_up: RetainedImage::from_image_bytes("xb_button_y.png", include_bytes!("..\\img\\xb_button_y.png")).unwrap(),
-
-            button_bumper_left: RetainedImage::from_image_bytes("xb_lb.png",  include_bytes!("..\\img\\xb_lb.png")).unwrap(),
-            button_bumper_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("..\\img\\xb_rb.png")).unwrap(),
-            // button_trigger_left: RetainedImage::from_image_bytes("xb_lt.png", include_bytes!("..\\img\\xb_lt.png")).unwrap(),
-            // button_trigger_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("..\\img\\xb_rb.png")).unwrap(),
-
-            left_stick: RetainedImage::from_image_bytes("left_analog.png", include_bytes!("..\\img\\left_analog.png")).unwrap(),
-            // right_stick: RetainedImage::from_image_bytes("right_analog.png", include_bytes!("..\\img\\right_analog.png")).unwrap(),
-
-            // button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("..\\img\\button_l3.png")).unwrap(),
-            button_r3: RetainedImage::from_image_bytes("button_r3.png", include_bytes!("..\\img\\button_r3.png")).unwrap(),
+            // TODO(Samantha): Consider not unwrappiner here, although panic makes sense if we can't load the image.
+            playstation: RetainedImage::from_image_bytes(debug_name, &fs::read(playstation).unwrap()).unwrap(),
+            xbox: RetainedImage::from_image_bytes(debug_name, &fs::read(xbox).unwrap()).unwrap(),
         }
     }
+    fn choose_image(&self, controller_type: ControllerType) -> &RetainedImage {
+        match controller_type {
+            ControllerType::Playstation => &self.playstation,
+            ControllerType::Xbox => &self.xbox,
+        }
+    }
+}
 
-    #[cfg(target_os = "linux")]
+struct OverlayImages {
+    button_d_up: ControllerImage,
+    button_d_down: ControllerImage,
+    button_d_left: ControllerImage,
+    button_d_right: ControllerImage,
+
+    button_face_down: ControllerImage,
+    button_face_right: ControllerImage,
+    button_face_left: ControllerImage,
+    button_face_up: ControllerImage,
+
+    button_bumper_left: ControllerImage,
+    button_bumper_right: ControllerImage,
+    // button_trigger_left: ControllerImage,
+    // button_trigger_right: ControllerImage,
+
+    left_stick: ControllerImage,
+    // right_stick: ControllerImage,
+
+    // button_l3: ControllerImage,
+    button_r3: ControllerImage,
+}
+
+
+impl Default for OverlayImages {
     fn default() -> Self {
         Self {
-            button_d_up: RetainedImage::from_image_bytes("dpad_up.png", include_bytes!("../img/dpad_up.png")).unwrap(),
-            button_d_down: RetainedImage::from_image_bytes("dpad_down.png", include_bytes!("../img/dpad_down.png")).unwrap(),
-            button_d_left: RetainedImage::from_image_bytes("dpad_left.png", include_bytes!("../img/dpad_left.png")).unwrap(),
-            button_d_right: RetainedImage::from_image_bytes("dpad_right.png", include_bytes!("../img/dpad_right.png")).unwrap(),
+            button_d_up: ControllerImage::new("dpad_up.png", "img/playstation/dpad_up.png", "img/xbox/dpad_up.png"),
+            button_d_down: ControllerImage::new("dpad_down.png", "img/playstation/dpad_down.png", "img/xbox/dpad_down.png"),
+            button_d_left: ControllerImage::new("dpad_left.png", "img/playstation/dpad_left.png", "img/xbox/dpad_left.png"),
+            button_d_right: ControllerImage::new("dpad_right.png", "img/playstation/dpad_right.png", "img/xbox/dpad_right.png"),
 
-            button_face_down: RetainedImage::from_image_bytes("xb_button_a.png",  include_bytes!("../img/xb_button_a.png")).unwrap(),
-            button_face_right: RetainedImage::from_image_bytes("xb_button_b.png", include_bytes!("../img/xb_button_b.png")).unwrap(),
-            button_face_left: RetainedImage::from_image_bytes("xb_button_x.png", include_bytes!("../img/xb_button_x.png")).unwrap(),
-            button_face_up: RetainedImage::from_image_bytes("xb_button_y.png", include_bytes!("../img/xb_button_y.png")).unwrap(),
+            button_face_down: ControllerImage::new("button_a.png", "img/playstation/ps_button_x.png",  "img/xbox/xb_button_a.png"),
+            button_face_right: ControllerImage::new("button_b.png", "img/playstation/ps_button_o.png", "img/xbox/xb_button_b.png"),
+            button_face_left: ControllerImage::new("button_x.png", "img/playstation/ps_button_sq.png", "img/xbox/xb_button_x.png"),
+            button_face_up: ControllerImage::new("button_y.png", "img/playstation/ps_button_tri.png", "img/xbox/xb_button_y.png"),
 
-            button_bumper_left: RetainedImage::from_image_bytes("xb_lb.png",  include_bytes!("../img/xb_lb.png")).unwrap(),
-            button_bumper_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("../img/xb_rb.png")).unwrap(),
-            // button_trigger_left: RetainedImage::from_image_bytes("xb_lt.png", include_bytes!("../img/xb_lt.png")).unwrap(),
-            // button_trigger_right: RetainedImage::from_image_bytes("xb_rb.png", include_bytes!("../img/xb_rb.png")).unwrap(),
+            button_bumper_left: ControllerImage::new("lb.png", "img/playstation/ps_lb.png",  "img/xbox/xb_lb.png"),
+            button_bumper_right: ControllerImage::new("rb.png", "img/playstation/ps_rb.png", "img/xbox/xb_rb.png"),
+            // button_trigger_left: ControllerImage::new("lt.png", "img/playstation/ps_lt.png", "img/xbox/xb_lt.png"),
+            // button_trigger_right: ControllerImage::new("rb.png", "img/playstation/ps_rb.png", "img/xbox/xb_rb.png"),
 
-            left_stick: RetainedImage::from_image_bytes("left_analog.png", include_bytes!("../img/left_analog.png")).unwrap(),
-            // right_stick: RetainedImage::from_image_bytes("right_analog.png", include_bytes!("../img/right_analog.png")).unwrap(),
+            left_stick: ControllerImage::new("left_analog.png", "img/playstation/left_analog.png", "img/xbox/left_analog.png"),
+            // right_stick: ControllerImage::new("right_analog.png", "img/playstation/right_analog.png", "img/xbox/right_analog.png"),
 
-            // button_l3: RetainedImage::from_image_bytes("button_l3.png", include_bytes!("../img/button_l3.png")).unwrap(),
-            button_r3: RetainedImage::from_image_bytes("button_r3.png", include_bytes!("../img/button_r3.png")).unwrap(),
+            // button_l3: ControllerImage::new("button_l3.png", "img/playstation/button_l3.png", "img/xbox/button_l3.png"),
+            button_r3: ControllerImage::new("button_r3.png", "img/playstation/button_r3.png", "img/xbox/button_r3.png"),
         }
     }
 }
@@ -132,16 +128,18 @@ impl GameOverlay {
         let x_offset = 0.828;
         let x_offset_offset = 0.029;
         let y_offset = 0.97;
-        self.place_overlay_image(ctx, &images.button_face_left, 
+        // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
+        let controller_type = self.gamepad_manager.controller_type.unwrap();
+        self.place_overlay_image(ctx, &images.button_face_left.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*3.0), y: self.overlay_settings.screen_height() * y_offset }, 
                        "button_face_left");
-        self.place_overlay_image(ctx, &images.button_face_down, 
+        self.place_overlay_image(ctx, &images.button_face_down.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
                         "button_face_down");
-        self.place_overlay_image(ctx, &images.button_face_right, 
+        self.place_overlay_image(ctx, &images.button_face_right.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
                         "button_face_right");
-        self.place_overlay_image(ctx, &images.button_face_up, 
+        self.place_overlay_image(ctx, &images.button_face_up.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset },
                         "button_face_up");
     }
@@ -150,19 +148,21 @@ impl GameOverlay {
         let x_offset = 0.2615;
         let x_offset_offset = 0.0242;
         let y_offset = 0.97;
-        self.place_overlay_image(ctx, &images.button_d_left, 
+        // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
+        let controller_type = self.gamepad_manager.controller_type.unwrap();
+        self.place_overlay_image(ctx, &images.button_d_left.choose_image(controller_type),
             Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*4.0), y: self.overlay_settings.screen_height() * y_offset }, 
            "button_d_left");
-        self.place_overlay_image(ctx, &images.button_d_down, 
+        self.place_overlay_image(ctx, &images.button_d_down.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*3.0), y: self.overlay_settings.screen_height() * y_offset }, 
                        "button_d_down");
-        self.place_overlay_image(ctx, &images.button_d_right, 
+        self.place_overlay_image(ctx, &images.button_d_right.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
                         "button_d_right");
-        self.place_overlay_image(ctx, &images.button_d_up, 
+        self.place_overlay_image(ctx, &images.button_d_up.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
                         "button_d_up");
-        self.place_overlay_image(ctx, &images.button_r3, 
+        self.place_overlay_image(ctx, &images.button_r3.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset },
                         "button_r3");
     }
@@ -171,13 +171,15 @@ impl GameOverlay {
         let x_offset = 0.8585;
         let x_offset_offset = 0.029;
         let y_offset = 0.909;
-        self.place_overlay_image(ctx, &images.left_stick, 
+        // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
+        let controller_type = self.gamepad_manager.controller_type.unwrap();
+        self.place_overlay_image(ctx, &images.left_stick.choose_image(controller_type),
             Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
             "left_stick");
-        self.place_overlay_image(ctx, &images.button_bumper_left, 
+        self.place_overlay_image(ctx, &images.button_bumper_left.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
                        "button_bumper_left");
-        self.place_overlay_image(ctx, &images.button_bumper_right, 
+        self.place_overlay_image(ctx, &images.button_bumper_right.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset }, 
                         "button_bumper_right");
     }

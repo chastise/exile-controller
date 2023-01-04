@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use gilrs::{Gilrs, GamepadId, Axis, Button, Event, EventType};
 
@@ -165,24 +165,26 @@ impl ControllerState {
 
 }
 
+#[derive(Copy, Clone)]
+pub enum ControllerType {
+    Playstation,
+    Xbox,
+}
+
 pub struct GamepadManager {
     gilrs_context: Gilrs,
     gamepad_id: Option<GamepadId>,
+    pub controller_type: Option<ControllerType>,
     pub controller_state: ControllerState,
 }
 
 pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f32) -> GamepadManager {
     let gilrs = Gilrs::new().unwrap();
-      
-    let potentially_connected_gamepad = gilrs.gamepads().next();
-    let connected_gamepad_id = match potentially_connected_gamepad {
-        Some((gamepad_id, _gamepad)) => Some(gamepad_id),
-        _ => None,
-    };
 
     let mut gamepad_manager = GamepadManager{
         gilrs_context: gilrs,
-        gamepad_id: connected_gamepad_id,
+        gamepad_id: None,
+        controller_type: None,
         controller_state: ControllerState::default(),
     };
 
@@ -285,12 +287,24 @@ impl GamepadManager {
     pub fn connect_to_controller(&mut self, connected_controllers: Vec<(GamepadId, String)>, index: usize) { 
         let gamepad_id = connected_controllers[index].0;
         self.gamepad_id = Some(gamepad_id);
+        self.controller_type = Some(self.determine_controller_type());
         println!("Controller connected!");
     }
 
     pub fn get_connected_controller_label(&self) -> String {
         if self.is_controller_connected() {
             self.gilrs_context.gamepad(self.gamepad_id.unwrap()).os_name().to_owned()
+        } else {
+            "none".to_owned()
+        }
+    }
+
+    pub fn get_connected_controller_map_name(&self) -> String {
+        if self.is_controller_connected() {
+            match self.gilrs_context.gamepad(self.gamepad_id.unwrap()).map_name() {
+                Some(mapper) => mapper.to_owned(),
+                None => "none".to_owned(),
+            }
         } else {
             "none".to_owned()
         }
@@ -303,6 +317,20 @@ impl GamepadManager {
         } else {
             println!("Failed to disconnect controller. Already disconnected?");
             false
+        }
+    }
+
+    pub fn determine_controller_type(&self) -> ControllerType {
+        // Matching on both of these gives us a greater chance at automatic
+        let map_name = self.get_connected_controller_map_name().to_lowercase();
+        let label = self.get_connected_controller_label().to_lowercase();
+        
+        // TODO(Samantha): This is a candidate for lazy static, but I'm not convinced that the compiler isn't optimizing this.
+        let playstation_names = HashSet::from(["ps5 controller", "ps4 controller", "ps3 controller", "ps2 controller", "ps1 controller", "playstation", "sony"]);
+        if playstation_names.contains(map_name.as_str()) || playstation_names.contains(label.as_str()) {
+            ControllerType::Playstation
+        } else {
+            ControllerType::Xbox
         }
     }
 }
