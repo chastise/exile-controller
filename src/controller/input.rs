@@ -188,6 +188,12 @@ pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f3
         controller_state: ControllerState::default(),
     };
 
+    // Gilrs will not initially throw a connected event if a controller is connected from the start
+    let connected_controllers = gamepad_manager.get_connected_controllers();
+    if !connected_controllers.is_empty() {
+        gamepad_manager.connect_to_controller(connected_controllers, 0);
+    }
+
     // initialize triggers and joy stick deadzones
     gamepad_manager.controller_state.trigger_left.set_trigger_threshold(gamepad_triggers_threshold);
     gamepad_manager.controller_state.trigger_right.set_trigger_threshold(gamepad_triggers_threshold);
@@ -198,75 +204,66 @@ pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f3
 }
 
 impl GamepadManager {
-    pub fn read_latest_input(&mut self) {
+    pub fn process_gamepad_events(&mut self) {
         let mut did_axis_change = false;
-        let gamepad_id = self.gamepad_id.unwrap();
         while let Some(Event { id, event, time: _ }) = self.gilrs_context.next_event() {
-            if id == gamepad_id {
-                match event {
-                    EventType::Disconnected => {
-                        let was_disconnected = self.disconect_connected_controller();
-                        println!("controller disconnected during input read? {:?}", was_disconnected);
+            match self.gamepad_id {
+                Some(gamepad_id) => {
+                    if id == gamepad_id {
+                        match event {
+                            EventType::Disconnected => self.disconnect_connected_controller(),
+                            EventType::ButtonChanged(button, value, _code) => {
+                                //println!("Button Changed! {:?}: {value} : {code}!", button);
+                                match button {
+                                    Button::South => {self.controller_state.a.changed_button_event(value)},
+                                    Button::East => {self.controller_state.b.changed_button_event(value)},
+                                    Button::North => {self.controller_state.y.changed_button_event(value)},
+                                    Button::West => {self.controller_state.x.changed_button_event(value)},
+                                    Button::LeftTrigger => {self.controller_state.bumper_left.changed_button_event(value)},
+                                    Button::LeftTrigger2 => {self.controller_state.trigger_left.changed_button_event(value)},
+                                    Button::RightTrigger => {self.controller_state.bumper_right.changed_button_event(value)},
+                                    Button::RightTrigger2 => {self.controller_state.trigger_right.changed_button_event(value)},
+                                    Button::Select => {self.controller_state.back.changed_button_event(value)},
+                                    Button::Start => {self.controller_state.start.changed_button_event(value)},
+                                    Button::LeftThumb => {self.controller_state.left_analog.button.changed_button_event(value)},
+                                    Button::RightThumb => {self.controller_state.right_analog.button.changed_button_event(value)},
+                                    Button::DPadUp => {self.controller_state.dpad_up.changed_button_event(value)},
+                                    Button::DPadDown => {self.controller_state.dpad_down.changed_button_event(value)},
+                                    Button::DPadLeft => {self.controller_state.dpad_left.changed_button_event(value)},
+                                    Button::DPadRight => {self.controller_state.dpad_right.changed_button_event(value)},
+                                    _ => (),
+                                }
+                            },
+                            EventType::AxisChanged(axis, value, _code) => {
+                                //println!("Axis Changed! {:?}: {value} : {_code}!", axis);
+                                match axis {
+                                    Axis::LeftStickX => {self.controller_state.left_analog.analog_stick.changed_axis_event(value, true); did_axis_change = true;}
+                                    Axis::LeftStickY => {self.controller_state.left_analog.analog_stick.changed_axis_event(value, false); did_axis_change = true;}
+                                    Axis::RightStickX => {self.controller_state.right_analog.analog_stick.changed_axis_event(value, true); did_axis_change = true;}
+                                    Axis::RightStickY => {self.controller_state.right_analog.analog_stick.changed_axis_event(value, false); did_axis_change = true;}
+                                    _ => (),
+                                }
+                            },
+                            _ => (),
+                        }
                     }
-                    EventType::ButtonChanged(button, value, _code) => {
-                        //println!("Button Changed! {:?}: {value} : {code}!", button);
-                        match button {
-                            Button::South => {self.controller_state.a.changed_button_event(value)},
-                            Button::East => {self.controller_state.b.changed_button_event(value)},
-                            Button::North => {self.controller_state.y.changed_button_event(value)},
-                            Button::West => {self.controller_state.x.changed_button_event(value)},
-                            Button::LeftTrigger => {self.controller_state.bumper_left.changed_button_event(value)},
-                            Button::LeftTrigger2 => {self.controller_state.trigger_left.changed_button_event(value)},
-                            Button::RightTrigger => {self.controller_state.bumper_right.changed_button_event(value)},
-                            Button::RightTrigger2 => {self.controller_state.trigger_right.changed_button_event(value)},
-                            Button::Select => {self.controller_state.back.changed_button_event(value)},
-                            Button::Start => {self.controller_state.start.changed_button_event(value)},
-                            Button::LeftThumb => {self.controller_state.left_analog.button.changed_button_event(value)},
-                            Button::RightThumb => {self.controller_state.right_analog.button.changed_button_event(value)},
-                            Button::DPadUp => {self.controller_state.dpad_up.changed_button_event(value)},
-                            Button::DPadDown => {self.controller_state.dpad_down.changed_button_event(value)},
-                            Button::DPadLeft => {self.controller_state.dpad_left.changed_button_event(value)},
-                            Button::DPadRight => {self.controller_state.dpad_right.changed_button_event(value)},
-                            _ => (),
-                        }
-                    },
-                    EventType::AxisChanged(axis, value, _code) => {
-                        //println!("Axis Changed! {:?}: {value} : {_code}!", axis);
-                        match axis {
-                            Axis::LeftStickX => {self.controller_state.left_analog.analog_stick.changed_axis_event(value, true); did_axis_change = true;}
-                            Axis::LeftStickY => {self.controller_state.left_analog.analog_stick.changed_axis_event(value, false); did_axis_change = true;}
-                            Axis::RightStickX => {self.controller_state.right_analog.analog_stick.changed_axis_event(value, true); did_axis_change = true;}
-                            Axis::RightStickY => {self.controller_state.right_analog.analog_stick.changed_axis_event(value, false); did_axis_change = true;}
-                            _ => (),
-                        }
-                    },
-                    _ => (),
-                }
+                },
+                // Things like hotplugging don't work unless we spin the gilrs events
+                None => {
+                    match event {
+                        EventType::Connected => {
+                            // TODO(Samantha): Is this really what we want to do here? Reconsider when we allow changing controllers.
+                            let connected_controllers = self.get_connected_controllers();
+                            self.connect_to_controller(connected_controllers, 0)
+                        },
+                        _ => (),
+                    }
+                },
             }
         }
         if did_axis_change {
             // println!("Axis after deadzones: Left Stick {:?} | Right Stick {:?}", self.controller_state.left_analog.stick_direction(), self.controller_state.right_analog.stick_direction());
         }
-    }
-
-    pub fn check_if_controller_disconnected(&mut self) -> bool {
-        let mut was_disconnected = false;
-        if self.is_controller_connected() {
-            let gamepad_id = self.gamepad_id.unwrap();
-            while let Some(Event { id, event, time: _ }) = self.gilrs_context.next_event() {
-                if id == gamepad_id {
-                    if event == EventType::Disconnected {
-                        was_disconnected = self.disconect_connected_controller();
-                    }
-                }
-            }
-        }
-        was_disconnected
-    }
-    
-    pub fn force_check_new_controllers(&mut self) {
-        // Force a new Gilrs instance because hotplugging doesn't seem to be working
-        self.gilrs_context = Gilrs::new().unwrap();
     }
 
     pub fn get_connected_controllers(&mut self) -> Vec<(GamepadId, String)> { 
@@ -310,13 +307,12 @@ impl GamepadManager {
         }
     }
 
-    pub fn disconect_connected_controller(&mut self) -> bool {
+    pub fn disconnect_connected_controller(&mut self) {
         if self.is_controller_connected() {
             self.gamepad_id = None;
-            true
+            println!("Controller disconnected!");
         } else {
             println!("Failed to disconnect controller. Already disconnected?");
-            false
         }
     }
 
