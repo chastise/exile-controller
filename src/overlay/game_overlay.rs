@@ -114,7 +114,8 @@ impl GameOverlay {
         let x_offset = 0.828;
         let x_offset_offset = 0.029;
         let y_offset = 0.97;
-        let controller_type = self.gamepad_manager.controller_type;
+        // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
+        let controller_type = self.gamepad_manager.controller_type.unwrap();
         self.place_overlay_image(ctx, &images.button_face_left.choose_image(controller_type),
                         Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*3.0), y: self.overlay_settings.screen_height() * y_offset }, 
                        "button_face_left");
@@ -133,7 +134,8 @@ impl GameOverlay {
         let x_offset = 0.2615;
         let x_offset_offset = 0.0242;
         let y_offset = 0.97;
-        let controller_type = self.gamepad_manager.controller_type;
+        // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
+        let controller_type = self.gamepad_manager.controller_type.unwrap();
         self.place_overlay_image(ctx, &images.button_d_left.choose_image(controller_type),
             Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*4.0), y: self.overlay_settings.screen_height() * y_offset }, 
            "button_d_left");
@@ -155,7 +157,8 @@ impl GameOverlay {
         let x_offset = 0.8585;
         let x_offset_offset = 0.029;
         let y_offset = 0.909;
-        let controller_type = self.gamepad_manager.controller_type;
+        // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
+        let controller_type = self.gamepad_manager.controller_type.unwrap();
         self.place_overlay_image(ctx, &images.left_stick.choose_image(controller_type),
             Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
             "left_stick");

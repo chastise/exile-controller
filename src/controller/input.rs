@@ -174,23 +174,17 @@ pub enum ControllerType {
 pub struct GamepadManager {
     gilrs_context: Gilrs,
     gamepad_id: Option<GamepadId>,
-    pub controller_type: ControllerType,
+    pub controller_type: Option<ControllerType>,
     pub controller_state: ControllerState,
 }
 
 pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f32) -> GamepadManager {
     let gilrs = Gilrs::new().unwrap();
-      
-    let potentially_connected_gamepad = gilrs.gamepads().next();
-    let connected_gamepad_id = match potentially_connected_gamepad {
-        Some((gamepad_id, _gamepad)) => Some(gamepad_id),
-        _ => None,
-    };
 
     let mut gamepad_manager = GamepadManager{
         gilrs_context: gilrs,
-        gamepad_id: connected_gamepad_id,
-        controller_type: ControllerType::Xbox,
+        gamepad_id: None,
+        controller_type: None,
         controller_state: ControllerState::default(),
     };
 
@@ -293,7 +287,7 @@ impl GamepadManager {
     pub fn connect_to_controller(&mut self, connected_controllers: Vec<(GamepadId, String)>, index: usize) { 
         let gamepad_id = connected_controllers[index].0;
         self.gamepad_id = Some(gamepad_id);
-        self.controller_type = self.determine_controller_type();
+        self.controller_type = Some(self.determine_controller_type());
         println!("Controller connected!");
     }
 
