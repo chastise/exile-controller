@@ -100,48 +100,6 @@ struct GameOverlay {
 }
 
 impl GameOverlay {
-    fn is_poe_active(&self) -> bool {
-        // TODO(Samantha): This is incompatible with windowed mode, but it doesn't seem worth a panic.
-        if self.overlay_settings.always_show_overlay() { return true; }
-        let active_window = active_win_pos_rs::get_active_window();
-            match active_window {
-                Ok(active_window) => {
-                    active_window.title.to_lowercase() == "Path of Exile".to_lowercase()
-                },
-                Err(_) => false,
-            }
-    }
-
-    fn poe_position(&self) -> (f32, f32) {
-        if self.is_poe_active() {
-            match active_win_pos_rs::get_position() {
-                Ok(position) => (position.x as f32, position.y as f32),
-                Err(_) => (0.0, 0.0),
-            }
-        } else {
-            (0.0, 0.0)
-        }
-    }
-
-    fn poe_size(&self) -> (f32, f32) {
-        if self.is_poe_active() {
-            match active_win_pos_rs::get_position() {
-                Ok(position) => (position.width as f32, position.height as f32),
-                Err(_) => (0.0, 0.0),
-            }
-        } else {
-            (0.0, 0.0)
-        }
-    }
-
-    fn get_screen_dimensions(&self) -> (f32, f32) {
-        if self.overlay_settings.windowed_mode() {
-            self.poe_size()
-        } else {
-            (self.overlay_settings.screen_width(), self.overlay_settings.screen_height())
-        }
-    }
-
     fn place_overlay_image(&self, ctx: &Context, image: &RetainedImage, position: Pos2, id_source: &str) {
         egui_backend::egui::Area::new(id_source)
                                     .movable(false)
@@ -153,9 +111,9 @@ impl GameOverlay {
     }
 
     fn place_face_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
-        let (window_x, window_y) = self.poe_position();
+        let (window_x, window_y) = self.overlay_settings.window_position();
         let window_vec = Vec2 {x: window_x, y: window_y};
-        let (screen_width, screen_height) = self.get_screen_dimensions();
+        let (screen_width, screen_height) = self.overlay_settings.get_window_dimensions();
 
         let x_offset = 0.828;
         let x_offset_offset = 0.029;
@@ -177,9 +135,9 @@ impl GameOverlay {
     }
 
     fn place_flask_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
-        let (window_x, window_y) = self.poe_position();
+        let (window_x, window_y) = self.overlay_settings.window_position();
         let window_vec = Vec2 {x: window_x, y: window_y};
-        let (screen_width, screen_height) = self.get_screen_dimensions();
+        let (screen_width, screen_height) = self.overlay_settings.get_window_dimensions();
 
         let x_offset = 0.2615;
         let x_offset_offset = 0.0242;
@@ -204,9 +162,9 @@ impl GameOverlay {
     }
 
     fn place_mouse_button_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
-        let (window_x, window_y) = self.poe_position();
+        let (window_x, window_y) = self.overlay_settings.window_position();
         let window_vec = Vec2 {x: window_x, y: window_y};
-        let (screen_width, screen_height) = self.get_screen_dimensions();
+        let (screen_width, screen_height) = self.overlay_settings.get_window_dimensions();
 
         let x_offset = 0.8585;
         let x_offset_offset = 0.029;
@@ -225,9 +183,9 @@ impl GameOverlay {
     }
 
     fn paint_crosshair (&self, ctx: &Context) {
-        let (window_x, window_y) = self.poe_position();
+        let (window_x, window_y) = self.overlay_settings.window_position();
         let window_vec = Vec2 {x: window_x, y: window_y};
-        let (screen_width, screen_height) = self.get_screen_dimensions();
+        let (screen_width, screen_height) = self.overlay_settings.get_window_dimensions();
 
         let crosshair_radius = 5.0;
         // offset radius*2.0 because the paint area is radius * 4 across
@@ -384,13 +342,13 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
         self.draw_remote(egui_context);
 
         if self.game_input_started {
-            if self.overlay_settings.show_buttons() && self.is_poe_active() {
+            if self.overlay_settings.show_buttons() && self.overlay_settings.is_poe_active() {
                 self.place_flask_overlay_images(egui_context, &self.overlay_images);
                 self.place_face_overlay_images(egui_context, &self.overlay_images);
                 self.place_mouse_button_overlay_images(egui_context, &self.overlay_images);
             }
 
-            if self.overlay_settings.show_crosshair() && self.is_poe_active() {
+            if self.overlay_settings.show_crosshair() && self.overlay_settings.is_poe_active() {
                 self.paint_crosshair(egui_context);
             }
 

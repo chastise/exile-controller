@@ -13,6 +13,48 @@ pub struct OverlaySettings {
 }
 
 impl OverlaySettings {
+    pub fn is_poe_active(&self) -> bool {
+        // TODO(Samantha): This is incompatible with windowed mode, but it doesn't seem worth a panic.
+        if self.always_show_overlay() { return true; }
+        let active_window = active_win_pos_rs::get_active_window();
+            match active_window {
+                Ok(active_window) => {
+                    active_window.title.to_lowercase() == "Path of Exile".to_lowercase()
+                },
+                Err(_) => false,
+            }
+    }
+
+    pub fn window_position(&self) -> (f32, f32) {
+        if self.is_poe_active() {
+            match active_win_pos_rs::get_position() {
+                Ok(position) => (position.x as f32, position.y as f32),
+                Err(_) => (0.0, 0.0),
+            }
+        } else {
+            (0.0, 0.0)
+        }
+    }
+
+    fn poe_size(&self) -> (f32, f32) {
+        if self.is_poe_active() {
+            match active_win_pos_rs::get_position() {
+                Ok(position) => (position.width as f32, position.height as f32),
+                Err(_) => (0.0, 0.0),
+            }
+        } else {
+            (0.0, 0.0)
+        }
+    }
+
+    pub fn get_window_dimensions(&self) -> (f32, f32) {
+        if self.windowed_mode() {
+            self.poe_size()
+        } else {
+            (self.screen_width(), self.screen_height())
+        }
+    }
+
     pub fn screen_height(&self) -> f32 {self.screen_height}
     pub fn screen_width(&self) -> f32 {self.screen_width}
     pub fn show_crosshair(&self) -> bool {self.show_crosshair}
