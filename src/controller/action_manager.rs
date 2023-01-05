@@ -193,12 +193,58 @@ impl ActionManager {
   
     }
 
+    // TODO(Samantha): Duplicating this functionality is assuredly the worst possible answer.
+    // But putting it in settings didn't seem right either. MOVEME.
+    fn is_poe_active(&self) -> bool {
+        // TODO(Samantha): This is incompatible with windowed mode, but it doesn't seem worth a panic.
+        if self.settings.overlay_settings().always_show_overlay() { return true; }
+        let active_window = active_win_pos_rs::get_active_window();
+            match active_window {
+                Ok(active_window) => {
+                    active_window.title.to_lowercase() == "Path of Exile".to_lowercase()
+                },
+                Err(_) => false,
+            }
+    }
+
+    fn poe_position(&self) -> (f32, f32) {
+        if self.is_poe_active() {
+            match active_win_pos_rs::get_position() {
+                Ok(position) => (position.x as f32, position.y as f32),
+                Err(_) => (0.0, 0.0),
+            }
+        } else {
+            (0.0, 0.0)
+        }
+    }
+
+    fn poe_size(&self) -> (f32, f32) {
+        if self.is_poe_active() {
+            match active_win_pos_rs::get_position() {
+                Ok(position) => (position.width as f32, position.height as f32),
+                Err(_) => (0.0, 0.0),
+            }
+        } else {
+            (0.0, 0.0)
+        }
+    }
+
+    fn get_screen_dimensions(&self) -> (f32, f32) {
+        if self.settings.overlay_settings().windowed_mode() {
+            self.poe_size()
+        } else {
+            (self.settings.overlay_settings().screen_width(), self.settings.overlay_settings().screen_height())
+        }
+    }
+
     fn get_radial_location(&self, circle_radius: f32, angle: f32) -> (f32, f32) {
         let screen_adjustment_x = angle.cos() * circle_radius;
         let screen_adjustment_y = angle.sin() * circle_radius;
-        let new_x = self.settings.overlay_settings().screen_width()/2.0 + screen_adjustment_x + self.settings.controller_settings().character_x_offset_px();
-        let new_y = self.settings.overlay_settings().screen_height()/2.0 - screen_adjustment_y - self.settings.controller_settings().character_y_offset_px();
-        (new_x, new_y)
+        let (screen_width, screen_height) = self.get_screen_dimensions();
+        let (screen_x, screen_y) = self.poe_position();
+        let new_x = screen_width/2.0 + screen_adjustment_x + self.settings.controller_settings().character_x_offset_px();
+        let new_y = screen_height/2.0 - screen_adjustment_y - self.settings.controller_settings().character_y_offset_px();
+        (new_x + screen_x, new_y + screen_y)
     }
 
     fn get_attack_circle_radius(&self, action_distance: ActionDistance) -> f32 {
