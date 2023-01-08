@@ -352,16 +352,17 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
         // The wgpu renderer panics when a frame has no vertices onscreen. 
         // This includes an offscreen remote or only images being drawn.
 
-        // egui_backend::egui::Area::new("No Crash Rectangle")
-        //                                 .default_pos(Pos2{x:0.0,y:0.0})
-        //                                 .show(egui_context,|ui| { 
-        //                                     let size = Vec2::splat(1.0);
-        //                                     let (response, painter) = ui.allocate_painter(size, egui::Sense::hover());
-        //                                     painter.rect(response.rect, 
-        //                                                     egui::Rounding{ nw: 0.0, ne: 0.0, sw: 0.0, se: 0.0 }, 
-        //                                                     egui::Color32::RED, 
-        //                                                     egui::Stroke{width:0.0, color:egui::Color32::TRANSPARENT});
-        //                                 });
+        #[cfg(target_os = "linux")]
+        egui_backend::egui::Area::new("No Crash Rectangle")
+                                        .default_pos(Pos2{x:0.0,y:0.0})
+                                        .show(egui_context,|ui| { 
+                                            let size = Vec2::splat(1.0);
+                                            let (response, painter) = ui.allocate_painter(size, egui::Sense::hover());
+                                            painter.rect(response.rect, 
+                                                            egui::Rounding{ nw: 0.0, ne: 0.0, sw: 0.0, se: 0.0 }, 
+                                                            egui::Color32::RED, 
+                                                            egui::Stroke{width:0.0, color:egui::Color32::TRANSPARENT});
+                                        });
 
         if egui_context.wants_pointer_input() || egui_context.wants_keyboard_input() {
             glfw_backend.window.set_mouse_passthrough(false);
