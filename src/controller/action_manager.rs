@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::game_window_tracker::GameWindowTracker;
 use crate::settings:: ApplicationSettings;
 
 use super::input::{ControllerButton, AnalogStick};
@@ -23,6 +24,7 @@ struct PlannedAction {
 pub struct ActionManager {
     action_handler: ActionHandler,
     planned_actions: Vec<PlannedAction>,
+    game_window_tracker: GameWindowTracker,
     settings: ApplicationSettings,
     holding_walk: bool,
     walking_angle: f32,
@@ -31,13 +33,15 @@ pub struct ActionManager {
     aiming_stick_direction: Vec<f32>,
     aiming_stick_pull_amount: f32,
     holding_ability: bool,
+    
 }
 
 impl ActionManager {
-    pub fn initialize (application_settings: ApplicationSettings) -> ActionManager {
+    pub fn initialize (application_settings: ApplicationSettings, game_window_tracker: GameWindowTracker) -> ActionManager {
         ActionManager {
             action_handler: ActionHandler::default(),
             planned_actions: Vec::<PlannedAction>::with_capacity(application_settings.button_mapping_settings().keys().count()), 
+            game_window_tracker: game_window_tracker,
             settings: application_settings,
             holding_walk: false,
             walking_angle: 0.0,
@@ -46,6 +50,7 @@ impl ActionManager {
             aiming_stick_direction: vec![0.0, 0.0],
             aiming_stick_pull_amount: 0.0,
             holding_ability: false,
+
         }
     }
 
@@ -94,6 +99,8 @@ impl ActionManager {
             self.aiming_stick_pull_amount = 0.0_f32;
         }
     }
+
+    pub fn update_window_tracker (&mut self) {self.game_window_tracker.update_window_tracker()}
 
     pub fn handle_character_actions(&mut self, ctx: &egui::Context) {
         let mut set_cursor = false;
@@ -196,8 +203,10 @@ impl ActionManager {
     fn get_radial_location(&self, circle_radius: f32, angle: f32) -> (f32, f32) {
         let screen_adjustment_x = angle.cos() * circle_radius;
         let screen_adjustment_y = angle.sin() * circle_radius;
-        let (screen_width, screen_height) = self.settings.overlay_settings().get_window_dimensions();
-        let (screen_x, screen_y) = self.settings.overlay_settings().window_position();
+        let screen_width = self.game_window_tracker.game_window_width();
+        let screen_height = self.game_window_tracker.game_window_height();
+        let screen_x = self.game_window_tracker.window_pos_x();
+        let screen_y = self.game_window_tracker.window_pos_y();
         let new_x = screen_width/2.0 + screen_adjustment_x + self.settings.controller_settings().character_x_offset_px();
         let new_y = screen_height/2.0 - screen_adjustment_y - self.settings.controller_settings().character_y_offset_px();
         (new_x + screen_x, new_y + screen_y)
