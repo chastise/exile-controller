@@ -248,7 +248,7 @@ impl GamepadManager {
                         }
                     }
                 },
-                // Things like hotplugging don't work unless we spin the gilrs events
+                // gilrs doesn't register new gamepads in gilrs_context.gamepads() until EventType::Connected events have been pulled off the events queue.
                 None => {
                     match event {
                         EventType::Connected => {
