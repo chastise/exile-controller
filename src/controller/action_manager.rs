@@ -203,13 +203,9 @@ impl ActionManager {
     fn get_radial_location(&self, circle_radius: f32, angle: f32) -> (f32, f32) {
         let screen_adjustment_x = angle.cos() * circle_radius;
         let screen_adjustment_y = angle.sin() * circle_radius;
-        let screen_width = self.game_window_tracker.game_window_width();
-        let screen_height = self.game_window_tracker.game_window_height();
-        let screen_x = self.game_window_tracker.window_pos_x();
-        let screen_y = self.game_window_tracker.window_pos_y();
-        let new_x = screen_width/2.0 + screen_adjustment_x + self.settings.controller_settings().character_x_offset_px();
-        let new_y = screen_height/2.0 - screen_adjustment_y - self.settings.controller_settings().character_y_offset_px();
-        (new_x + screen_x, new_y + screen_y)
+        let new_x = self.game_window_tracker.game_window_width()/2.0 + screen_adjustment_x + self.settings.controller_settings().character_x_offset_px();
+        let new_y = self.game_window_tracker.game_window_height()/2.0 - screen_adjustment_y - self.settings.controller_settings().character_y_offset_px();
+        (new_x + self.game_window_tracker.window_pos_x(), new_y + self.game_window_tracker.window_pos_y())
     }
 
     fn get_attack_circle_radius(&self, action_distance: ActionDistance) -> f32 {
