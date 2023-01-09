@@ -312,7 +312,6 @@ impl GameOverlay {
         if self.overlay_settings.windowed_mode() && self.game_window_tracker.is_poe_active() {
             self.game_action_handler.update_window_tracker();
         }
-        self.gamepad_manager.read_latest_input();
         self.game_action_handler.process_input_buttons(self.gamepad_manager.controller_state.get_all_buttons());
         self.game_action_handler.process_input_analogs(self.gamepad_manager.controller_state.get_left_analog_stick(), 
                                             self.gamepad_manager.controller_state.get_right_analog_stick());
