@@ -14,6 +14,9 @@ use controller::{input, action_manager};
 mod overlay;
 use overlay::game_overlay;
 
+use crate::game_window_tracker::GameWindowTracker;
+mod game_window_tracker;
+
 fn main() {
     println!("Loading settings.toml...");
     let application_settings = settings::load_settings();
@@ -26,8 +29,8 @@ fn main() {
     let gamepad_manager = input::load_gamepad_manager(0.8_f32, 
                                                                                     application_settings.controller_settings().controller_deadzone());
     println!("Initializing action handler."); 
-    let game_action_handler = action_manager::ActionManager::initialize(application_settings.clone());
+    let game_action_handler = action_manager::ActionManager::initialize(application_settings.clone(), GameWindowTracker::new(application_settings.clone()));
 
     println!("Starting overlay");
-    game_overlay::start_overlay(application_settings.overlay_settings(), application_settings.controller_settings(), gamepad_manager, game_action_handler);
+    game_overlay::start_overlay(application_settings.overlay_settings(), application_settings.controller_settings(), gamepad_manager, game_action_handler, GameWindowTracker::new(application_settings.clone()));
 }

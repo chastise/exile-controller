@@ -3,6 +3,7 @@ use std::process::exit;
 use super::egui_overlay;
 use crate::controller::action_manager::ActionManager;
 use crate::controller::input::{GamepadManager, ControllerType};
+use crate::game_window_tracker::GameWindowTracker;
 use crate::settings::{OverlaySettings, ControllerSettings};
 
 use egui::{Vec2, Context, epaint, Color32};
@@ -85,9 +86,12 @@ impl Default for OverlayImages {
     }
 }
 
+
+
 struct GameOverlay {
     overlay_settings: OverlaySettings,
-    window_rect: Rect,
+    game_window_tracker: GameWindowTracker,
+    window_rect: Rect, // TODO: Can get rid of this
     overlay_images: OverlayImages,
     controller_settings: ControllerSettings,
     gamepad_manager: GamepadManager, 
@@ -98,21 +102,6 @@ struct GameOverlay {
 }
 
 impl GameOverlay {
-    fn is_poe_active(&self) -> bool {
-        if self.overlay_settings.always_show_overlay() { return true; }
-        let active_window = active_win_pos_rs::get_active_window();
-            match active_window {
-                Ok(active_window) => {
-                    if active_window.title.to_lowercase() == "Path of Exile".to_lowercase() {
-                        true
-                    } else {
-                        false
-                    }
-                },
-                Err(_) => false,
-            }
-    }
-
     fn place_overlay_image(&self, ctx: &Context, image: &RetainedImage, position: Pos2, id_source: &str) {
         egui_backend::egui::Area::new(id_source)
                                     .movable(false)
@@ -130,16 +119,20 @@ impl GameOverlay {
         // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
         let controller_type = self.gamepad_manager.controller_type.unwrap();
         self.place_overlay_image(ctx, &images.button_face_left.choose_image(controller_type),
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*3.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                        Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*3.0) + self.game_window_tracker.window_pos_x(), 
+                            y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                        "button_face_left");
         self.place_overlay_image(ctx, &images.button_face_down.choose_image(controller_type),
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                        Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*2.0) + self.game_window_tracker.window_pos_x(), 
+                            y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_face_down");
         self.place_overlay_image(ctx, &images.button_face_right.choose_image(controller_type),
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                        Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*1.0) + self.game_window_tracker.window_pos_x(), 
+                            y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_face_right");
         self.place_overlay_image(ctx, &images.button_face_up.choose_image(controller_type),
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset },
+                        Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset) + self.game_window_tracker.window_pos_x(), 
+                            y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_face_up");
     }
 
@@ -150,19 +143,24 @@ impl GameOverlay {
         // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
         let controller_type = self.gamepad_manager.controller_type.unwrap();
         self.place_overlay_image(ctx, &images.button_d_left.choose_image(controller_type),
-            Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*4.0), y: self.overlay_settings.screen_height() * y_offset }, 
+            Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*4.0) + self.game_window_tracker.window_pos_x(), 
+                y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
            "button_d_left");
         self.place_overlay_image(ctx, &images.button_d_down.choose_image(controller_type),
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*3.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                        Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*3.0) + self.game_window_tracker.window_pos_x(), 
+                            y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                        "button_d_down");
         self.place_overlay_image(ctx, &images.button_d_right.choose_image(controller_type),
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                        Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*2.0) + self.game_window_tracker.window_pos_x(), 
+                            y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_d_right");
         self.place_overlay_image(ctx, &images.button_d_up.choose_image(controller_type),
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                        Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*1.0) + self.game_window_tracker.window_pos_x(), 
+                            y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_d_up");
         self.place_overlay_image(ctx, &images.button_r3.choose_image(controller_type),
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset },
+                        Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset) + self.game_window_tracker.window_pos_x(), 
+                            y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_r3");
     }
 
@@ -173,21 +171,24 @@ impl GameOverlay {
         // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
         let controller_type = self.gamepad_manager.controller_type.unwrap();
         self.place_overlay_image(ctx, &images.left_stick.choose_image(controller_type),
-            Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*2.0), y: self.overlay_settings.screen_height() * y_offset }, 
+            Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*2.0) + self.game_window_tracker.window_pos_x(), 
+                y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
             "left_stick");
         self.place_overlay_image(ctx, &images.button_bumper_left.choose_image(controller_type),
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset-x_offset_offset*1.0), y: self.overlay_settings.screen_height() * y_offset }, 
+                        Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*1.0) + self.game_window_tracker.window_pos_x(), 
+                            y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                        "button_bumper_left");
         self.place_overlay_image(ctx, &images.button_bumper_right.choose_image(controller_type),
-                        Pos2 { x: self.overlay_settings.screen_width() * (x_offset), y: self.overlay_settings.screen_height() * y_offset }, 
+                        Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset) + self.game_window_tracker.window_pos_x(), 
+                            y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_bumper_right");
     }
 
     fn paint_crosshair (&self, ctx: &Context) {
         let crosshair_radius = 5.0;
         // offset radius*2.0 because the paint area is radius * 4 across
-        let crosshair_position = Pos2 { x: (self.overlay_settings.screen_width() / 2.0) - self.controller_settings.character_x_offset_px() - crosshair_radius*2.0, 
-                                                y: (self.overlay_settings.screen_height() / 2.0) - self.controller_settings.character_y_offset_px() - crosshair_radius*2.0};
+        let crosshair_position = Pos2 { x: (self.game_window_tracker.game_window_width() / 2.0) - self.controller_settings.character_x_offset_px() - crosshair_radius*2.0  + self.game_window_tracker.window_pos_x(), 
+                                                y: (self.game_window_tracker.game_window_height() / 2.0) - self.controller_settings.character_y_offset_px() - crosshair_radius*2.0 + self.game_window_tracker.window_pos_y()};
         egui::Area::new("crosshair")
                         .movable(false)
                         .fixed_pos(crosshair_position)
@@ -308,6 +309,9 @@ impl GameOverlay {
     // }
 
     fn handle_controller_input_loop (&mut self, ctx: &Context) {
+        if self.overlay_settings.windowed_mode() && self.game_window_tracker.is_poe_active() {
+            self.game_action_handler.update_window_tracker();
+        }
         self.game_action_handler.process_input_buttons(self.gamepad_manager.controller_state.get_all_buttons());
         self.game_action_handler.process_input_analogs(self.gamepad_manager.controller_state.get_left_analog_stick(), 
                                             self.gamepad_manager.controller_state.get_right_analog_stick());
@@ -332,13 +336,16 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
         // Make sure we process gamepad events no matter what, lest we lose disconnections and connections.
         self.gamepad_manager.process_gamepad_events();
         if self.game_input_started {
-            if self.overlay_settings.show_buttons() && self.is_poe_active() {
+            if self.overlay_settings.windowed_mode() && self.game_window_tracker.is_poe_active() {
+                self.game_window_tracker.update_window_tracker();
+            }
+            if self.overlay_settings.show_buttons() && (self.overlay_settings.always_show_overlay() || self.game_window_tracker.is_poe_active()) {
                 self.place_flask_overlay_images(egui_context, &self.overlay_images);
                 self.place_face_overlay_images(egui_context, &self.overlay_images);
                 self.place_mouse_button_overlay_images(egui_context, &self.overlay_images);
             }
 
-            if self.overlay_settings.show_crosshair() && self.is_poe_active() {
+            if self.overlay_settings.show_crosshair() && (self.overlay_settings.always_show_overlay() || self.game_window_tracker.is_poe_active()) {
                 self.paint_crosshair(egui_context);
             }
 
@@ -372,12 +379,13 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
     }
 }
 
-pub fn start_overlay(overlay_settings: OverlaySettings, controller_settings: ControllerSettings, gamepad_manager: GamepadManager, game_action_handler: ActionManager) {
+pub fn start_overlay(overlay_settings: OverlaySettings, controller_settings: ControllerSettings, gamepad_manager: GamepadManager, game_action_handler: ActionManager, game_window_tracker: GameWindowTracker) {
     let screen_width = overlay_settings.screen_width();
     let screen_height = overlay_settings.screen_height();
     let game_overlay = GameOverlay{
+        game_window_tracker: game_window_tracker,
         overlay_settings: overlay_settings,
-        window_rect: Rect::from_two_pos(Pos2 { x: 0.0, y: 0.0 }, Pos2 {x: screen_width, y: screen_height}),
+        window_rect: Rect::from_two_pos(Pos2 { x: 0.0, y: 0.0 }, Pos2 {x: screen_width, y: screen_height}), // This should really be screen rect
         overlay_images: OverlayImages::default(),
         controller_settings: controller_settings,
         gamepad_manager: gamepad_manager,

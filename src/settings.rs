@@ -9,6 +9,7 @@ pub struct OverlaySettings {
     show_crosshair: bool,
     show_buttons: bool,
     always_show_overlay: bool,
+    windowed_mode: bool,
 }
 
 impl OverlaySettings {
@@ -17,6 +18,7 @@ impl OverlaySettings {
     pub fn show_crosshair(&self) -> bool {self.show_crosshair}
     pub fn show_buttons(&self) -> bool {self.show_buttons}
     pub fn always_show_overlay(&self) -> bool {self.always_show_overlay}
+    pub fn windowed_mode(&self) -> bool {self.windowed_mode}
 }
 
 #[derive(Clone)]
@@ -80,6 +82,7 @@ pub fn load_settings() -> ApplicationSettings {
                             show_crosshair: settings.get_bool("overlay.show_crosshair").unwrap(),
                             show_buttons: settings.get_bool("overlay.show_buttons").unwrap(),
                             always_show_overlay: settings.get_bool("overlay.always_show_overlay").unwrap(),
+                            windowed_mode: settings.get_bool("overlay.windowed_mode").unwrap()
                         },
 
         button_mapping_settings: {

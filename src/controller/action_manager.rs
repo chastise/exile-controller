@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::game_window_tracker::GameWindowTracker;
 use crate::settings:: ApplicationSettings;
 
 use super::input::{ControllerButton, AnalogStick};
@@ -23,6 +24,7 @@ struct PlannedAction {
 pub struct ActionManager {
     action_handler: ActionHandler,
     planned_actions: Vec<PlannedAction>,
+    game_window_tracker: GameWindowTracker,
     settings: ApplicationSettings,
     holding_walk: bool,
     walking_angle: f32,
@@ -31,13 +33,15 @@ pub struct ActionManager {
     aiming_stick_direction: Vec<f32>,
     aiming_stick_pull_amount: f32,
     holding_ability: bool,
+    
 }
 
 impl ActionManager {
-    pub fn initialize (application_settings: ApplicationSettings) -> ActionManager {
+    pub fn initialize (application_settings: ApplicationSettings, game_window_tracker: GameWindowTracker) -> ActionManager {
         ActionManager {
             action_handler: ActionHandler::default(),
             planned_actions: Vec::<PlannedAction>::with_capacity(application_settings.button_mapping_settings().keys().count()), 
+            game_window_tracker: game_window_tracker,
             settings: application_settings,
             holding_walk: false,
             walking_angle: 0.0,
@@ -46,6 +50,7 @@ impl ActionManager {
             aiming_stick_direction: vec![0.0, 0.0],
             aiming_stick_pull_amount: 0.0,
             holding_ability: false,
+
         }
     }
 
@@ -95,6 +100,8 @@ impl ActionManager {
         }
     }
 
+    pub fn update_window_tracker (&mut self) {self.game_window_tracker.update_window_tracker()}
+
     pub fn handle_character_actions(&mut self, ctx: &egui::Context) {
         let mut set_cursor = false;
 
@@ -107,17 +114,17 @@ impl ActionManager {
                 if planned_action.aimable {
                     if self.holding_walk && self.holding_aim {
                         let (new_x, new_y) = self.get_radial_location(self.get_attack_circle_radius(planned_action.distance), self.aiming_angle);
-                        self.action_handler.move_mouse(new_x as f64, new_y as f64);
+                        self.safe_move_mouse(new_x as f64, new_y as f64);
                         set_cursor = true;
                     } else if self.holding_walk && !self.holding_aim {
                         let (new_x, new_y) = self.get_radial_location(self.get_attack_circle_radius(planned_action.distance), self.walking_angle);
-                        self.action_handler.move_mouse(new_x as f64, new_y as f64);
+                        self.safe_move_mouse(new_x as f64, new_y as f64);
                         set_cursor = true;
                     }
                     // todo probably inject a delay for the two above
                 } else if planned_action.distance != ActionDistance::None && self.holding_walk {
                         let (new_x, new_y) = self.get_radial_location(self.get_attack_circle_radius(planned_action.distance), self.walking_angle);
-                        self.action_handler.move_mouse(new_x as f64, new_y as f64);
+                        self.safe_move_mouse(new_x as f64, new_y as f64);
                         set_cursor = true;
                 }
                 self.action_handler.handle_action(ActionType::Press, key_name);
@@ -164,11 +171,11 @@ impl ActionManager {
             }
             if some_held_action_aimable && self.holding_aim {
                 let (new_x, new_y) = self.get_radial_location(chosen_distance, self.aiming_angle);
-                self.action_handler.move_mouse(new_x as f64, new_y as f64);
+                self.safe_move_mouse(new_x as f64, new_y as f64);
                 set_cursor = true;
             } else {
                 let (new_x, new_y) = self.get_radial_location(chosen_distance, self.walking_angle);
-                self.action_handler.move_mouse(new_x as f64, new_y as f64);
+                self.safe_move_mouse(new_x as f64, new_y as f64);
                 set_cursor = true;
             }
         }
@@ -176,14 +183,14 @@ impl ActionManager {
         // if aiming and not moving!
         if self.holding_aim && !self.holding_walk {
             let (new_x_pos, new_y_pos) = self.get_free_move_update(ctx);
-            self.action_handler.move_mouse(new_x_pos, new_y_pos);
+            self.safe_move_mouse(new_x_pos, new_y_pos);
             set_cursor = true;
         } 
 
         // if moving!
         if self.holding_walk && !set_cursor {
             let (new_x, new_y) = self.get_radial_location(self.settings.controller_settings().walk_circle_radius_px(), self.walking_angle);
-            self.action_handler.move_mouse(new_x as f64, new_y as f64);
+            self.safe_move_mouse(new_x as f64, new_y as f64);
         }
         if self.holding_walk {
             self.action_handler.handle_action(ActionType::Press, "LeftClick".to_string());
@@ -193,11 +200,47 @@ impl ActionManager {
   
     }
 
+    fn safe_move_mouse(&self, new_x: f64, new_y: f64) {
+        if self.game_window_tracker.windowed_mode() {
+            let (new_safe_x, new_safe_y) = self.get_window_bounded_position(new_x, new_y);
+            self.action_handler.move_mouse(new_safe_x, new_safe_y);
+        } else {
+            self.action_handler.move_mouse(new_x as f64, new_y as f64);
+        }
+    }
+    
+    fn get_window_bounded_position(&self, new_x: f64, new_y: f64) -> (f64, f64) {
+        let mut return_x = new_x;
+        let mut return_y = new_y;
+
+        #[cfg(target_os = "linux")]
+        let (title_bar_height, window_shadow_amount) = (2.0, 2.0); // magic numbers for linux
+        #[cfg(target_os = "windows")]
+        let (title_bar_height, window_shadow_amount) = (32.0, 10.0); // magic numbers, may only be correct on windows
+
+        let min_x_pos = (self.game_window_tracker.window_pos_x() + window_shadow_amount) as f64;
+        let min_y_pos = (self.game_window_tracker.window_pos_y() + title_bar_height) as f64;
+        let max_x_pos = (self.game_window_tracker.window_pos_x() + self.game_window_tracker.game_window_width() - window_shadow_amount) as f64;
+        let max_y_pos = (self.game_window_tracker.window_pos_y() + self.game_window_tracker.game_window_height()- window_shadow_amount) as f64;
+        if new_x < min_x_pos {
+            return_x = min_x_pos;
+        } else if new_x > max_x_pos {
+            return_x = max_x_pos;
+        }
+        if new_y < min_y_pos {
+            return_y = min_y_pos;
+        } else if new_y > max_y_pos {
+            return_y = max_y_pos;
+        }
+        (return_x, return_y)
+    }
+
+
     fn get_radial_location(&self, circle_radius: f32, angle: f32) -> (f32, f32) {
         let screen_adjustment_x = angle.cos() * circle_radius;
         let screen_adjustment_y = angle.sin() * circle_radius;
-        let new_x = self.settings.overlay_settings().screen_width()/2.0 + screen_adjustment_x + self.settings.controller_settings().character_x_offset_px();
-        let new_y = self.settings.overlay_settings().screen_height()/2.0 - screen_adjustment_y - self.settings.controller_settings().character_y_offset_px();
+        let new_x = self.game_window_tracker.game_window_width()/2.0 + screen_adjustment_x + self.settings.controller_settings().character_x_offset_px() + self.game_window_tracker.window_pos_x();
+        let new_y = self.game_window_tracker.game_window_height()/2.0 - screen_adjustment_y - self.settings.controller_settings().character_y_offset_px() + self.game_window_tracker.window_pos_y();
         (new_x, new_y)
     }
 
@@ -213,7 +256,6 @@ impl ActionManager {
     fn get_free_move_update(&self, ctx: &egui::Context) -> (f64, f64){
         let screen_adjustment_x = self.aiming_stick_direction[0] * self.settings.controller_settings().free_mouse_sensitivity_px() ;
         let screen_adjustment_y = -1.0 * self.aiming_stick_direction[1] * self.settings.controller_settings().free_mouse_sensitivity_px();
-        
         // There is a chance that there _is_ no mouse position.
         match ctx.input().pointer.hover_pos() {
             Some(position) => ((position.x + screen_adjustment_x) as f64, (position.y + screen_adjustment_y) as f64),
