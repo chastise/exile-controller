@@ -205,7 +205,6 @@ pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f3
 
 impl GamepadManager {
     pub fn process_gamepad_events(&mut self) {
-        let mut did_axis_change = false;
         while let Some(Event { id, event, time: _ }) = self.gilrs_context.next_event() {
             match self.gamepad_id {
                 Some(gamepad_id) => {
@@ -237,10 +236,10 @@ impl GamepadManager {
                             EventType::AxisChanged(axis, value, _code) => {
                                 //println!("Axis Changed! {:?}: {value} : {_code}!", axis);
                                 match axis {
-                                    Axis::LeftStickX => {self.controller_state.left_analog.analog_stick.changed_axis_event(value, true); did_axis_change = true;}
-                                    Axis::LeftStickY => {self.controller_state.left_analog.analog_stick.changed_axis_event(value, false); did_axis_change = true;}
-                                    Axis::RightStickX => {self.controller_state.right_analog.analog_stick.changed_axis_event(value, true); did_axis_change = true;}
-                                    Axis::RightStickY => {self.controller_state.right_analog.analog_stick.changed_axis_event(value, false); did_axis_change = true;}
+                                    Axis::LeftStickX => {self.controller_state.left_analog.analog_stick.changed_axis_event(value, true);}
+                                    Axis::LeftStickY => {self.controller_state.left_analog.analog_stick.changed_axis_event(value, false);}
+                                    Axis::RightStickX => {self.controller_state.right_analog.analog_stick.changed_axis_event(value, true);}
+                                    Axis::RightStickY => {self.controller_state.right_analog.analog_stick.changed_axis_event(value, false);}
                                     _ => (),
                                 }
                             },
@@ -260,9 +259,6 @@ impl GamepadManager {
                     }
                 },
             }
-        }
-        if did_axis_change {
-            // println!("Axis after deadzones: Left Stick {:?} | Right Stick {:?}", self.controller_state.left_analog.stick_direction(), self.controller_state.right_analog.stick_direction());
         }
     }
 
