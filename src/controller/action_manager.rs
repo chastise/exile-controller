@@ -212,8 +212,12 @@ impl ActionManager {
     fn get_window_bounded_position(&self, new_x: f64, new_y: f64) -> (f64, f64) {
         let mut return_x = new_x;
         let mut return_y = new_y;
-        let title_bar_height = 32.0; // magic number, may only be correct on windows
-        let window_shadow_amount = 10.0; // magic number, may only be correct on windows
+
+        #[cfg(target_os = "linux")]
+        let (title_bar_height, window_shadow_amount) = (2.0, 2.0); // magic numbers for linux
+        #[cfg(target_os = "windows")]
+        let (title_bar_height, window_shadow_amount) = (32.0, 10.0); // magic numbers, may only be correct on windows
+
         let min_x_pos = (self.game_window_tracker.window_pos_x() + window_shadow_amount) as f64;
         let min_y_pos = (self.game_window_tracker.window_pos_y() + title_bar_height) as f64;
         let max_x_pos = (self.game_window_tracker.window_pos_x() + self.game_window_tracker.game_window_width() - window_shadow_amount) as f64;
