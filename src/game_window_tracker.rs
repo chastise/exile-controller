@@ -22,7 +22,7 @@ impl GameWindowTracker {
             game_window_height: application_settings.overlay_settings().screen_height(),
         }
     }
-
+    pub fn windowed_mode(&self) -> bool {self.windowed_mode} // TODO: Remove this when we allow in-gui settings editing
     pub fn window_pos_x(&self) -> f32 {self.window_pos_x}
     pub fn window_pos_y(&self) -> f32 {self.window_pos_y}
     pub fn game_window_width(&self) -> f32 {self.game_window_width}
