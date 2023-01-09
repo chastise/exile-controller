@@ -1,4 +1,3 @@
-use std::time::{Duration, Instant};
 use std::process::exit;
 
 use super::egui_overlay;
@@ -100,7 +99,6 @@ struct GameOverlay {
     remote_open: bool,
     remote_pos: Pos2,
     game_input_started: bool,
-    controller_check_timer: Instant,
 }
 
 impl GameOverlay {
@@ -225,23 +223,16 @@ impl GameOverlay {
         ctx.set_visuals(gui_visuals);
 
         if self.remote_open {
-            // Check for connected controllers
-            if !self.gamepad_manager.is_controller_connected() && Instant::now() > self.controller_check_timer + Duration::from_secs(1) {
-                self.controller_check_timer = Instant::now();
-                self.gamepad_manager.force_check_new_controllers();
-                let connected_controllers = self.gamepad_manager.get_connected_controllers();
-                println!("Connected controller count: {:?}", connected_controllers.len());
-                if !connected_controllers.is_empty() {
-                    self.gamepad_manager.connect_to_controller(connected_controllers, 0);
-                    // Check the configs to see if we should overload the controller type.
-                    let configured_controller_type = self.controller_settings.controller_type();
-                    if configured_controller_type != "auto".to_owned() {
-                        match configured_controller_type.as_str() {
-                            "xbox" => self.gamepad_manager.force_set_controller_type(ControllerType::Xbox),
-                            "ps" => self.gamepad_manager.force_set_controller_type(ControllerType::Playstation),
-                            _ => ()
-                        }
-                    }
+            if self.gamepad_manager.is_controller_connected() {
+                // The user could update this setting as often as every frame?
+                // TODO(Samantha): Move this somewhere sensible.
+                let configured_controller_type = self.controller_settings.controller_type();
+                match configured_controller_type.as_str () {
+                    "xbox" => self.gamepad_manager.force_set_controller_type(ControllerType::Xbox),
+                    "ps" => self.gamepad_manager.force_set_controller_type(ControllerType::Playstation),
+                    // TODO(Samantha): We may eventually want to determine_controller_type here.
+                    "auto" => (),
+                    _ => panic!("We shouldn't be able to get an invalid controller type here."),
                 }
             }
             // Draw the remote
@@ -282,7 +273,6 @@ impl GameOverlay {
                                             });
                                         });
                                     }).unwrap().response.rect.left_top();
-            self.gamepad_manager.check_if_controller_disconnected();
         } else {
             // Draw the minimized remote
             new_pos =  egui::Window::new("Exile Controller Minimized Remote")
@@ -344,6 +334,8 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
 
         self.draw_remote(egui_context);
 
+        // Make sure we process gamepad events no matter what, lest we lose disconnections and connections.
+        self.gamepad_manager.process_gamepad_events();
         if self.game_input_started {
             if self.overlay_settings.windowed_mode() && self.game_window_tracker.is_poe_active() {
                 self.game_window_tracker.update_window_tracker();
@@ -368,16 +360,17 @@ impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOver
         // The wgpu renderer panics when a frame has no vertices onscreen. 
         // This includes an offscreen remote or only images being drawn.
 
-        // egui_backend::egui::Area::new("No Crash Rectangle")
-        //                                 .default_pos(Pos2{x:0.0,y:0.0})
-        //                                 .show(egui_context,|ui| { 
-        //                                     let size = Vec2::splat(1.0);
-        //                                     let (response, painter) = ui.allocate_painter(size, egui::Sense::hover());
-        //                                     painter.rect(response.rect, 
-        //                                                     egui::Rounding{ nw: 0.0, ne: 0.0, sw: 0.0, se: 0.0 }, 
-        //                                                     egui::Color32::RED, 
-        //                                                     egui::Stroke{width:0.0, color:egui::Color32::TRANSPARENT});
-        //                                 });
+        #[cfg(target_os = "linux")]
+        egui_backend::egui::Area::new("No Crash Rectangle")
+                                        .default_pos(Pos2{x:0.0,y:0.0})
+                                        .show(egui_context,|ui| { 
+                                            let size = Vec2::splat(1.0);
+                                            let (response, painter) = ui.allocate_painter(size, egui::Sense::hover());
+                                            painter.rect(response.rect, 
+                                                            egui::Rounding{ nw: 0.0, ne: 0.0, sw: 0.0, se: 0.0 }, 
+                                                            egui::Color32::RED, 
+                                                            egui::Stroke{width:0.0, color:egui::Color32::TRANSPARENT});
+                                        });
 
         if egui_context.wants_pointer_input() || egui_context.wants_keyboard_input() {
             glfw_backend.window.set_mouse_passthrough(false);
@@ -401,7 +394,6 @@ pub fn start_overlay(overlay_settings: OverlaySettings, controller_settings: Con
         remote_open: true,
         remote_pos: Pos2 { x: screen_width / 2.0 , y: screen_height / 16.0 },
         game_input_started: false,
-        controller_check_timer: Instant::now(),
     };
 
     egui_overlay::start_egui_overlay(game_overlay, screen_width as i32, screen_height as i32);
