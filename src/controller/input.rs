@@ -165,16 +165,23 @@ impl ControllerState {
 
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, serde::Deserialize)]
 pub enum ControllerType {
     Playstation,
     Xbox,
 }
 
+#[derive(Copy, Clone, serde::Deserialize)]
+pub enum ControllerTypeDetection {
+    Auto,
+    Forced(ControllerType),
+}
+
 pub struct GamepadManager {
     gilrs_context: Gilrs,
     gamepad_id: Option<GamepadId>,
-    pub controller_type: Option<ControllerType>,
+    controller_type: Option<ControllerType>,
+    pub controller_type_detection: ControllerTypeDetection,
     pub controller_state: ControllerState,
 }
 
@@ -185,6 +192,7 @@ pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f3
         gilrs_context: gilrs,
         gamepad_id: None,
         controller_type: None,
+        controller_type_detection: ControllerTypeDetection::Auto,
         controller_state: ControllerState::default(),
     };
 
@@ -280,7 +288,7 @@ impl GamepadManager {
     pub fn connect_to_controller(&mut self, connected_controllers: Vec<(GamepadId, String)>, index: usize) { 
         let gamepad_id = connected_controllers[index].0;
         self.gamepad_id = Some(gamepad_id);
-        self.controller_type = Some(self.determine_controller_type());
+        self.controller_type = Some(self.infer_controller_type());
         println!("Controller connected!");
     }
 
@@ -312,7 +320,7 @@ impl GamepadManager {
         }
     }
 
-    pub fn determine_controller_type(&self) -> ControllerType {
+    fn infer_controller_type(&self) -> ControllerType {
         // Matching on both of these gives us a greater chance at automatic
         let map_name = self.get_connected_controller_map_name().to_lowercase();
         let label = self.get_connected_controller_label().to_lowercase();
@@ -326,7 +334,14 @@ impl GamepadManager {
         }
     }
 
-    pub fn force_set_controller_type(&mut self, controller_type: ControllerType) {
-        self.controller_type = Some(controller_type);
+    pub fn determine_controller_type(&self) -> ControllerType {
+        match self.controller_type_detection {
+            ControllerTypeDetection::Forced(controller_type) => controller_type,
+            ControllerTypeDetection::Auto => self.controller_type.unwrap(),
+        }
+    }
+
+    pub fn set_controller_type_detection(&mut self, controller_type_detection: ControllerTypeDetection) {
+        self.controller_type_detection = controller_type_detection;
     }
 }

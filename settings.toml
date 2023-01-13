@@ -1,3 +1,20 @@
+# Enables move-aiming with the right stick
+# Bumpers, triggers and abxy only!
+aimable_buttons = ["bumper_right"]
+
+# Sets action distance from character when pushed while moving or move-aiming. 
+# Ideal for setting movement skill distances, totem drop distances, etc
+# Must be close/mid/far; Aimable buttons without this will snap to "walk" distance.
+# When not moving or move-aiming, all skills target current mouse position without snapping.
+# May get weird if holding several buttons.
+# Bumpers, triggers and abxy only!
+action_distances = {x = "far", a = "mid"}
+
+# You must bind your left-click ability in PoE to movement.
+# You must also let the game use default ability mappings for QWERT
+# To bind no keypress to a button, set the binding to two quotes ""
+button_mapping = {x = "q", y = "r", a = "w", b = "e", start = "i", back = "alt", dpad_down = "2", dpad_left = "1", dpad_right = "3", dpad_up = "4", left_analog = "", right_analog = "5", bumper_left = "MiddleClick", bumper_right = "RightClick", trigger_left = "escape", trigger_right = "AltLeftClick"}
+
 [overlay]
 screen_height = 1080
 screen_width = 1920
@@ -6,42 +23,6 @@ show_buttons = true
 # Cannot currently have both always_show_overlay and windowed_mode set to true
 always_show_overlay = false
 windowed_mode = false
-
-# You must bind your left-click ability in PoE to movement.
-# You must also let the game use default ability mappings for QWERT
-# To bind no keypress to a button, set the binding to two quotes ""
-[button_mapping]
-x = "q"
-y = "r"
-a = "w"
-b = "e"
-start = "i"
-back = "alt"
-dpad_down = "2"
-dpad_left = "1"
-dpad_right = "3"
-dpad_up = "4"
-left_analog = "" #L3
-right_analog = "5" #R3
-bumper_left = "MiddleClick"
-bumper_right = "RightClick"
-trigger_left = "escape"
-trigger_right = "AltLeftClick"
-
-# Enables move-aiming with the right stick
-# Bumpers, triggers and abxy only!
-[aimable_buttons]
-aimable = ["bumper_right"]
-
-# Sets action distance from character when pushed while moving or move-aiming. 
-# Ideal for setting movement skill distances, totem drop distances, etc
-# Must be close/mid/far; Aimable buttons without this will snap to "walk" distance.
-# When not moving or move-aiming, all skills target current mouse position without snapping.
-# May get weird if holding several buttons.
-# Bumpers, triggers and abxy only!
-[action_distance]
-x = "far"
-a = "mid"
 
 [controller]
 walk_circle_radius_px = "110"
@@ -52,4 +33,4 @@ character_x_offset_px = "0"
 character_y_offset_px = "100"
 dead_zone_percentage = "0.17"
 free_mouse_sensitivity_px = "10"
-controller_type = "auto" # Must be set to auto, xbox or ps
+controller_type = "Auto" # Must be set to {Forced = "Playstation"}, {Forced = "Xbox"}, "Auto"

@@ -116,8 +116,8 @@ impl GameOverlay {
         let x_offset = 0.828;
         let x_offset_offset = 0.029;
         let y_offset = 0.97;
-        // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
-        let controller_type = self.gamepad_manager.controller_type.unwrap();
+
+        let controller_type = self.gamepad_manager.determine_controller_type();
         self.place_overlay_image(ctx, &images.button_face_left.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*3.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
@@ -140,8 +140,8 @@ impl GameOverlay {
         let x_offset = 0.2615;
         let x_offset_offset = 0.0242;
         let y_offset = 0.97;
-        // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
-        let controller_type = self.gamepad_manager.controller_type.unwrap();
+
+        let controller_type = self.gamepad_manager.determine_controller_type();
         self.place_overlay_image(ctx, &images.button_d_left.choose_image(controller_type),
             Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*4.0) + self.game_window_tracker.window_pos_x(), 
                 y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
@@ -168,8 +168,8 @@ impl GameOverlay {
         let x_offset = 0.8585;
         let x_offset_offset = 0.029;
         let y_offset = 0.909;
-        // If we somehow don't have a controller connected in here, there are bigger issues. A panic makes sense.
-        let controller_type = self.gamepad_manager.controller_type.unwrap();
+
+        let controller_type = self.gamepad_manager.determine_controller_type();
         self.place_overlay_image(ctx, &images.left_stick.choose_image(controller_type),
             Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*2.0) + self.game_window_tracker.window_pos_x(), 
                 y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
@@ -227,13 +227,7 @@ impl GameOverlay {
                 // The user could update this setting as often as every frame?
                 // TODO(Samantha): Move this somewhere sensible.
                 let configured_controller_type = self.controller_settings.controller_type();
-                match configured_controller_type.as_str () {
-                    "xbox" => self.gamepad_manager.force_set_controller_type(ControllerType::Xbox),
-                    "ps" => self.gamepad_manager.force_set_controller_type(ControllerType::Playstation),
-                    // TODO(Samantha): We may eventually want to determine_controller_type here.
-                    "auto" => (),
-                    _ => panic!("We shouldn't be able to get an invalid controller type here."),
-                }
+                self.gamepad_manager.set_controller_type_detection(configured_controller_type);
             }
             // Draw the remote
             new_pos = egui::Window::new(egui::RichText::new("Exile Controller").color(Color32::from_rgb(227, 117, 0)).strong())
