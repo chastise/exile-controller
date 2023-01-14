@@ -170,7 +170,7 @@ fn incorrect_keys(test: &HashSet<String>, control: &HashSet<String>) {
 }
 
 
-fn alert_and_exit_on_invalid_settings(error_message: &str) {
+pub fn alert_and_exit_on_invalid_settings(error_message: &str) {
     // Blocks execution on message display until closes the message
 
     // Uncomment this if you want panics instead of popups while debugging

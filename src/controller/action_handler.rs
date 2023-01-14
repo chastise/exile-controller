@@ -1,6 +1,8 @@
 use rdev::{simulate, Button, EventType, Key, SimulateError};
 use std::{thread, time, collections::HashMap};
 
+use crate::settings::{alert_and_exit_on_invalid_settings};
+
 #[derive(PartialEq)]
 pub enum ActionType {
     Press,
@@ -121,7 +123,9 @@ impl ActionHandler {
             "shift" => {Key::ShiftLeft},
             "control" => {Key::ControlLeft},
             &_ => {
-                panic!("Invalid key {:?}", key_str); // TODO: Make this raise a config error to the user in the overlay
+                // TODO: We should probably check this on config load, but keeping it here for now because if bindable keys / actions changes, it'll happen here.
+                alert_and_exit_on_invalid_settings(&format!("Invalid action configured in settings: {:?}", key_str));
+                panic!("Invalid action configured in settings: {:?}", key_str); 
             }
         }
     }
