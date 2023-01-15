@@ -49,27 +49,34 @@ impl ControllerSettings {
     pub fn free_mouse_sensitivity_px(&self) -> f32 {self.free_mouse_sensitivity_px}
     pub fn controller_type(&self) -> ControllerTypeDetection {self.controller_type.clone()}
 }
+#[derive(Clone, Deserialize, Eq, Hash, PartialEq)]
+pub enum ButtonOrKey {
+    Button(rdev::Button),
+    Key(rdev::Key),
+    ButtonKeyChord(rdev::Button, rdev::Key),
+    Empty,
+}
 
 #[derive(Clone, Deserialize)]
 pub struct ApplicationSettings {
     #[serde(rename(deserialize = "overlay"))]
     overlay_settings: OverlaySettings,
     #[serde(rename(deserialize = "button_mapping"))]
-    button_mapping_settings: HashMap<String, String>,
+    button_mapping_settings: HashMap<gilrs::Button, ButtonOrKey>,
     #[serde(skip_deserializing)]
-    ability_mapping_settings: HashMap<String, String>,
-    aimable_buttons: Vec<String>,
-    action_distances: HashMap<String, String>,
+    ability_mapping_settings: HashMap<ButtonOrKey, gilrs::Button>,
+    aimable_buttons: Vec<gilrs::Button>,
+    action_distances: HashMap<gilrs::Button, String>,
     #[serde(rename(deserialize = "controller"))]
     controller_settings: ControllerSettings,
 }
 
 impl ApplicationSettings {
     pub fn overlay_settings(&self) -> OverlaySettings {self.overlay_settings.clone()}
-    pub fn button_mapping_settings(&self) -> HashMap<String, String> {self.button_mapping_settings.clone()}
-    pub fn ability_mapping_settings(&self) -> HashMap<String, String> {self.ability_mapping_settings.clone()}
-    pub fn aimable_buttons(&self) -> Vec<String> {self.aimable_buttons.clone()}
-    pub fn action_distances(&self) -> HashMap<String, String> {self.action_distances.clone()}
+    pub fn button_mapping_settings(&self) -> HashMap<gilrs::Button, ButtonOrKey> {self.button_mapping_settings.clone()}
+    pub fn ability_mapping_settings(&self) -> HashMap<ButtonOrKey, gilrs::Button> {self.ability_mapping_settings.clone()}
+    pub fn aimable_buttons(&self) -> Vec<gilrs::Button> {self.aimable_buttons.clone()}
+    pub fn action_distances(&self) -> HashMap<gilrs::Button, String> {self.action_distances.clone()}
     pub fn controller_settings(&self) -> ControllerSettings {self.controller_settings.clone()}
 
     fn sanitize_settings(&mut self) {
@@ -78,16 +85,26 @@ impl ApplicationSettings {
             panic!("Windowed Mode is unsupported when coupled with Always Show Overlay!");
         }
 
-        let valid_ability_buttons: HashSet<String> = HashSet::from(["a", "b", "x", "y", "bumper_left", "bumper_right", "trigger_left", "trigger_right"].map(|x| x.to_owned()));
+        let valid_ability_buttons: HashSet<gilrs::Button> = HashSet::from(
+            [
+                gilrs::Button::South,
+                gilrs::Button::East,
+                gilrs::Button::West,
+                gilrs::Button::North,
+                gilrs::Button::LeftTrigger,
+                gilrs::Button::RightTrigger,
+                gilrs::Button::LeftTrigger2,
+                gilrs::Button::RightTrigger2]);
+
         let valid_ability_ranges: HashSet<String>= HashSet::from(["close", "mid", "far"].map(|x| x.to_owned()));
-        let buttons: Vec<String> = self.action_distances.keys().cloned().collect();
+        let buttons: Vec<gilrs::Button> = self.action_distances.keys().cloned().collect();
         let distances: Vec<String> = self.action_distances.values().cloned().collect();
 
         // Ensure ability ranges!
         for button in &buttons {
             if !valid_ability_buttons.contains(button) {
-                alert_and_exit_on_invalid_settings(&format!("{:} is not a valid button ({:#?})", button, valid_ability_buttons));
-                panic!("{:} is not a valid button ({:#?})", button, valid_ability_buttons);
+                alert_and_exit_on_invalid_settings(&format!("{:?} is not a valid button ({:#?})", button, valid_ability_buttons));
+                panic!("{:?} is not a valid button ({:#?})", button, valid_ability_buttons);
             }
         }
         for distance in &distances {
@@ -96,28 +113,28 @@ impl ApplicationSettings {
                 panic!("{:} is not a valid distance ({:#?})", distance, valid_ability_ranges);
             }
         }
-
         // Ensure buttons are valid!
         let valid_buttons_set = HashSet::from(
             [
-                "x",
-                "y",
-                "a",
-                "b",
-                "start",
-                "back",
-                "dpad_down",
-                "dpad_left",
-                "dpad_right",
-                "dpad_up",
-                "left_analog",
-                "right_analog",
-                "bumper_left",
-                "bumper_right",
-                "trigger_left",
-                "trigger_right"].map(|x| x.to_owned()));
-        let button_mapping_keys: Vec<String> = self.button_mapping_settings.keys().cloned().collect();
-        let button_mapping_key_set: HashSet<String >= HashSet::from_iter(button_mapping_keys);
+                gilrs::Button::West,
+                gilrs::Button::North,
+                gilrs::Button::South,
+                gilrs::Button::East,
+                gilrs::Button::Start,
+                gilrs::Button::Select,
+                gilrs::Button::DPadDown,
+                gilrs::Button::DPadLeft,
+                gilrs::Button::DPadRight,
+                gilrs::Button::DPadUp,
+                gilrs::Button::LeftThumb,
+                gilrs::Button::RightThumb,
+                gilrs::Button::LeftTrigger,
+                gilrs::Button::RightTrigger,
+                gilrs::Button::LeftTrigger2,
+                gilrs::Button::RightTrigger2]);
+
+        let button_mapping_keys: Vec<gilrs::Button> = self.button_mapping_settings.keys().cloned().collect();
+        let button_mapping_key_set: HashSet<gilrs::Button>= HashSet::from_iter(button_mapping_keys);
         if !ensure_initialized(&button_mapping_key_set, &valid_buttons_set) {
             incorrect_keys(&button_mapping_key_set, &valid_buttons_set)
         }
@@ -125,45 +142,45 @@ impl ApplicationSettings {
         // Ensure aimables
         let valid_aimable_buttons_set = HashSet::from(
             [
-                "x",
-                "y",
-                "a",
-                "b",
-                "bumper_left",
-                "bumper_right",
-                "trigger_left",
-                "trigger_right"].map(|x| x.to_owned()));
+                gilrs::Button::West,
+                gilrs::Button::North,
+                gilrs::Button::South,
+                gilrs::Button::East,
+                gilrs::Button::LeftTrigger,
+                gilrs::Button::RightTrigger,
+                gilrs::Button::LeftTrigger2,
+                gilrs::Button::RightTrigger2]);
 
         for button in &self.aimable_buttons {
             if !valid_aimable_buttons_set.contains(button) {
-                alert_and_exit_on_invalid_settings(&format!("{:} is not a valid aimable button ({:#?})", button, valid_aimable_buttons_set));
-                panic!("{:} is not a valid aimable button ({:#?})", button, valid_aimable_buttons_set);
+                alert_and_exit_on_invalid_settings(&format!("{:#?} is not a valid aimable button ({:#?})", button, valid_aimable_buttons_set));
+                panic!("{:#?} is not a valid aimable button ({:#?})", button, valid_aimable_buttons_set);
             }
         }
 
         // Setup ability_mapping_settings
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("a").unwrap().clone(), "a".to_owned());
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("b").unwrap().clone(), "b".to_owned());
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("x").unwrap().clone(), "x".to_owned());
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("y").unwrap().clone(), "y".to_owned());
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("bumper_left").unwrap().clone(), "bumper_left".to_owned());
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("bumper_right").unwrap().clone(), "bumper_right".to_owned());
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("trigger_left").unwrap().clone(), "trigger_left".to_owned());
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("trigger_right").unwrap().clone(), "trigger_right".to_owned());
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get(&gilrs::Button::South).unwrap().clone(), gilrs::Button::South);
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get(&gilrs::Button::East).unwrap().clone(), gilrs::Button::East);
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get(&gilrs::Button::West).unwrap().clone(), gilrs::Button::West);
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get(&gilrs::Button::North).unwrap().clone(), gilrs::Button::North);
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get(&gilrs::Button::LeftTrigger).unwrap().clone(), gilrs::Button::LeftTrigger);
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get(&gilrs::Button::RightTrigger).unwrap().clone(), gilrs::Button::RightTrigger);
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get(&gilrs::Button::LeftTrigger2).unwrap().clone(), gilrs::Button::LeftTrigger2);
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get(&gilrs::Button::RightTrigger2).unwrap().clone(), gilrs::Button::RightTrigger2);
     }
 }
 
-fn ensure_initialized(test: &HashSet<String>, control: &HashSet<String>) -> bool {
+fn ensure_initialized(test: &HashSet<gilrs::Button>, control: &HashSet<gilrs::Button>) -> bool {
     test.is_subset(&control) && control.is_subset(&test)
 }
 
-fn incorrect_keys(test: &HashSet<String>, control: &HashSet<String>) {
-    let missing: Vec<&String> = control.difference(&test).collect();
+fn incorrect_keys(test: &HashSet<gilrs::Button>, control: &HashSet<gilrs::Button>) {
+    let missing: Vec<&gilrs::Button> = control.difference(&test).collect();
     if missing.len() > 0 {
         alert_and_exit_on_invalid_settings(&format!("Must initialize button_mapping! You are missing {:#?}", missing));
         panic!("Must initialize button_mapping! You are missing {:#?}", missing);
     } else {
-        let extra: Vec<&String> = test.difference(&control).collect();
+        let extra: Vec<&gilrs::Button> = test.difference(&control).collect();
         alert_and_exit_on_invalid_settings(&format!("Only initialize proper buttons: {:#?}! \n Your extras are: {:#?}", extra, control));
         panic!("Only initialize proper buttons: {:#?}! \n Your extras are: {:#?}", extra, control);
     }
