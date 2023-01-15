@@ -193,9 +193,9 @@ impl ActionManager {
             self.safe_move_mouse(new_x as f64, new_y as f64);
         }
         if self.holding_walk {
-            self.action_handler.handle_action(ActionType::Press, "LeftClick".to_string());
+            self.action_handler.handle_action(ActionType::Press, "leftclick".to_string());
         } else { // TODO: How does this work with held move skills? Might need to add "if not holding walk"
-            self.action_handler.handle_action(ActionType::Release, "LeftClick".to_string());
+            self.action_handler.handle_action(ActionType::Release, "leftclick".to_string());
         }
   
     }

@@ -29,104 +29,112 @@ impl Default for ActionHandler {
 
 impl ActionHandler {
     pub fn handle_action(&mut self, action_type: ActionType, action: String) {
-        match action.as_str() {
-            "AltLeftClick" => { 
-                self.handle_action_with_modifier_key("LeftClick".to_owned(), "Alt".to_owned(), 20);
+        let action_lower = action.to_lowercase();
+        let action_str = action_lower.as_str();
+        match action_str {
+            // Check for known "special" cases first.
+            "altleftclick" => { 
+                self.handle_action_with_modifier_key("leftclick".to_owned(), "alt".to_owned(), 20);
             },
-            "LeftClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
-            "MiddleClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
-            "RightClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
-            &_ => { // If it's not a mouse or special case, assume it's a key press
-                self.handle_keypress_action(self.match_key_str_to_key(action.to_lowercase().as_str()), action_type, action);
+            // Not a special case, fall through
+            _ => { 
+                if let Some(mouse_button) = self.match_mouse_str_to_button(action_str) {
+                    // "LeftClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
+                    // "MiddleClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
+                    // "RightClick" => {self.handle_mouse_action(self.match_mouse_str_to_button(action.as_str()), action_type);},
+                    self.handle_mouse_action(mouse_button, action_type);
+                } else if let Some(key_button) = self.match_key_str_to_key(action_str) {
+                    // self.handle_keypress_action(self.match_key_str_to_key(action.to_lowercase().as_str()), action_type, action);
+                    self.handle_keypress_action(key_button, action_type, action);
+                } else {
+                    // TODO: We should probably check this on config load, but keeping it here for now because if bindable keys / actions changes, it'll happen here.
+                    alert_and_exit_on_invalid_settings(&format!("Invalid action configured in settings: {:?}", action_str));
+                    panic!("Invalid action configured in settings: {:?}", action_str); 
+                }
+                
             }
         }
     }
 
-    fn match_mouse_str_to_button(&self, mouse_str: &str) -> Button {
+    fn match_mouse_str_to_button(&self, mouse_str: &str) -> Option<Button> {
         match mouse_str {
-            "LeftClick" => {Button::Left},
-            "MiddleClick" => {Button::Middle},
-            "RightClick" => {Button::Right},
-            &_ => {
-                panic!("Invalid mouse_button {:?}", mouse_str); // TODO: Make this raise a config error to the user in the overlay
-            }
+            "leftclick" => {Some(Button::Left)},
+            "middleclick" => {Some(Button::Middle)},
+            "rightclick" => {Some(Button::Right)},
+            &_ => { None }
         }
     }
 
-    fn match_key_str_to_key(&self, key_str: &str) -> Key {
-        match key_str {
-            "f1" => {Key::F1},
-            "f2" => {Key::F2},
-            "f3" => {Key::F3},
-            "f4" => {Key::F4},
-            "f5" => {Key::F5},
-            "f6" => {Key::F6},
-            "f7" => {Key::F7},
-            "f8" => {Key::F8},
-            "f9" => {Key::F9},
-            "f10" => {Key::F10},
-            "f11" => {Key::F11},
-            "f12" => {Key::F12},
-            "a" => {Key::KeyA},
-            "b" => {Key::KeyB},
-            "c" => {Key::KeyC},
-            "d" => {Key::KeyD},
-            "e" => {Key::KeyE},
-            "f" => {Key::KeyF},
-            "g" => {Key::KeyG},
-            "h" => {Key::KeyH},
-            "i" => {Key::KeyI},
-            "j" => {Key::KeyJ},
-            "k" => {Key::KeyK},
-            "l" => {Key::KeyL},
-            "m" => {Key::KeyM},
-            "n" => {Key::KeyN},
-            "o" => {Key::KeyO},
-            "p" => {Key::KeyP},
-            "q" => {Key::KeyQ},
-            "r" => {Key::KeyR},
-            "s" => {Key::KeyS},
-            "t" => {Key::KeyT},
-            "u" => {Key::KeyU},
-            "v" => {Key::KeyV},
-            "w" => {Key::KeyW},
-            "x" => {Key::KeyX},
-            "y" => {Key::KeyY},
-            "z" => {Key::KeyZ},
-            "0" => {Key::Num0},
-            "1" => {Key::Num1},
-            "2" => {Key::Num2},
-            "3" => {Key::Num3},
-            "4" => {Key::Num4},
-            "5" => {Key::Num5},
-            "6" => {Key::Num6},
-            "7" => {Key::Num7},
-            "8" => {Key::Num8},
-            "9" => {Key::Num9},
-            "`" => {Key::BackQuote},
-            "[" => {Key::LeftBracket},
-            "]" => {Key::RightBracket},
-            ";" => {Key::SemiColon},
-            "/" => {Key::Slash},
-            "," => {Key::Comma},
-            "=" => {Key::Equal},
-            "escape" => {Key::Escape},
-            "space" => {Key::Space},
-            "tab" => {Key::Tab},
-            "backspace" => {Key::Backspace},
-            "delete" => {Key::Delete},
-            "uparrow" => {Key::UpArrow},
-            "downarrow" => {Key::DownArrow},
-            "leftarrow" => {Key::LeftArrow},
-            "rightarrow" => {Key::RightArrow},
-            "alt" => {Key::Alt},
-            "shift" => {Key::ShiftLeft},
-            "control" => {Key::ControlLeft},
-            &_ => {
-                // TODO: We should probably check this on config load, but keeping it here for now because if bindable keys / actions changes, it'll happen here.
-                alert_and_exit_on_invalid_settings(&format!("Invalid action configured in settings: {:?}", key_str));
-                panic!("Invalid action configured in settings: {:?}", key_str); 
-            }
+    fn match_key_str_to_key(&self, key_str: &str) -> Option<Key> {
+        match key_str {            
+            "f1" => {Some(Key::F1)},
+            "f2" => {Some(Key::F2)},
+            "f3" => {Some(Key::F3)},
+            "f4" => {Some(Key::F4)},
+            "f5" => {Some(Key::F5)},
+            "f6" => {Some(Key::F6)},
+            "f7" => {Some(Key::F7)},
+            "f8" => {Some(Key::F8)},
+            "f9" => {Some(Key::F9)},
+            "f10" => {Some(Key::F10)},
+            "f11" => {Some(Key::F11)},
+            "f12" => {Some(Key::F12)},
+            "a" => {Some(Key::KeyA)},
+            "b" => {Some(Key::KeyB)},
+            "c" => {Some(Key::KeyC)},
+            "d" => {Some(Key::KeyD)},
+            "e" => {Some(Key::KeyE)},
+            "f" => {Some(Key::KeyF)},
+            "g" => {Some(Key::KeyG)},
+            "h" => {Some(Key::KeyH)},
+            "i" => {Some(Key::KeyI)},
+            "j" => {Some(Key::KeyJ)},
+            "k" => {Some(Key::KeyK)},
+            "l" => {Some(Key::KeyL)},
+            "m" => {Some(Key::KeyM)},
+            "n" => {Some(Key::KeyN)},
+            "o" => {Some(Key::KeyO)},
+            "p" => {Some(Key::KeyP)},
+            "q" => {Some(Key::KeyQ)},
+            "r" => {Some(Key::KeyR)},
+            "s" => {Some(Key::KeyS)},
+            "t" => {Some(Key::KeyT)},
+            "u" => {Some(Key::KeyU)},
+            "v" => {Some(Key::KeyV)},
+            "w" => {Some(Key::KeyW)},
+            "x" => {Some(Key::KeyX)},
+            "y" => {Some(Key::KeyY)},
+            "z" => {Some(Key::KeyZ)},
+            "0" => {Some(Key::Num0)},
+            "1" => {Some(Key::Num1)},
+            "2" => {Some(Key::Num2)},
+            "3" => {Some(Key::Num3)},
+            "4" => {Some(Key::Num4)},
+            "5" => {Some(Key::Num5)},
+            "6" => {Some(Key::Num6)},
+            "7" => {Some(Key::Num7)},
+            "8" => {Some(Key::Num8)},
+            "9" => {Some(Key::Num9)},
+            "`" => {Some(Key::BackQuote)},
+            "[" => {Some(Key::LeftBracket)},
+            "]" => {Some(Key::RightBracket)},
+            ";" => {Some(Key::SemiColon)},
+            "/" => {Some(Key::Slash)},
+            "," => {Some(Key::Comma)},
+            "=" => {Some(Key::Equal)},
+            "escape" => {Some(Key::Escape)},
+            "space" => {Some(Key::Space)},
+            "tab" => {Some(Key::Tab)},
+            "backspace" => {Some(Key::Backspace)},
+            "delete" => {Some(Key::Delete)},
+            "uparrow" => {Some(Key::UpArrow)},
+            "downarrow" => {Some(Key::DownArrow)},
+            "leftarrow" => {Some(Key::LeftArrow)},
+            "rightarrow" => {Some(Key::RightArrow)},
+            "alt" => {Some(Key::Alt)},
+            "shift" => {Some(Key::ShiftLeft)},
+            "control" => {Some(Key::ControlLeft)},
+            &_ => { None }
         }
     }
 
@@ -209,8 +217,8 @@ impl ActionHandler {
     }
     pub fn get_held_ability_actions(&self) -> Vec<String> {
         let mut held_ability_actions = Vec::<String>::new();
-        if self.middle_mouse_held {held_ability_actions.push("MiddleClick".to_owned());}
-        if self.right_mouse_held {held_ability_actions.push("RightClick".to_owned());}
+        if self.middle_mouse_held {held_ability_actions.push("middleclick".to_owned());}
+        if self.right_mouse_held {held_ability_actions.push("rightclick".to_owned());}
         if self.held_keys.contains_key(&Key::KeyQ) {held_ability_actions.push("q".to_owned());}
         if self.held_keys.contains_key(&Key::KeyW) {held_ability_actions.push("w".to_owned());}
         if self.held_keys.contains_key(&Key::KeyE) {held_ability_actions.push("e".to_owned());}
