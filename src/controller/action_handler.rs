@@ -13,7 +13,8 @@ pub struct ActionHandler {
     left_mouse_held: bool,
     middle_mouse_held: bool,
     right_mouse_held: bool,
-    held_keys: HashMap<Key, String>
+    held_keys: HashMap<Key, String>,
+    holding_left_click_for_action: bool,
 }
 
 impl Default for ActionHandler {
@@ -23,6 +24,7 @@ impl Default for ActionHandler {
             middle_mouse_held: false,
             right_mouse_held: false,
             held_keys: HashMap::<Key, String>::with_capacity(20),
+            holding_left_click_for_action: false,
         }
     }
 }
@@ -34,7 +36,7 @@ impl ActionHandler {
         match action_str {
             // Check for known "special" cases first.
             "altleftclick" => { 
-                self.handle_action_with_modifier_key("leftclick".to_owned(), "alt".to_owned(), 20);
+                self.handle_action_with_modifier_key(action_type, "leftclick".to_owned(), "alt".to_owned(), 20, 10);
             },
             // Not a special case, fall through
             _ => { 
@@ -54,6 +56,10 @@ impl ActionHandler {
                 
             }
         }
+    }
+
+    pub fn holding_left_click_for_action(&self) -> bool {
+        self.holding_left_click_for_action
     }
 
     fn match_mouse_str_to_button(&self, mouse_str: &str) -> Option<Button> {
@@ -190,12 +196,43 @@ impl ActionHandler {
         }
     }
 
-    fn handle_action_with_modifier_key(&mut self, action: String, modifier: String, delay_ms: u64) {
-        self.handle_action(ActionType::Press, modifier.to_owned());
-        thread::sleep(time::Duration::from_millis(delay_ms));
+    fn handle_action_with_modifier_key(&mut self, action_type: ActionType, action: String, modifier: String, delay_ms_before: u64, delay_ms_after: u64) {
+        // We can trust this lookup so long as we only call this function with known inputs. 
+        // If inputs are user-specified, we must refactor to check them.
+        let modifier_key = self.match_key_str_to_key(&modifier).unwrap();
+        let modifier_already_held = self.held_keys.contains_key(&modifier_key);
+        let mut action_string = modifier.to_owned();
+        action_string.push_str(action.as_str());
 
-        self.handle_action(ActionType::Press, action);
-        self.handle_action(ActionType::Release, modifier);
+        if action_type == ActionType::Press {
+            if !modifier_already_held {
+                self.handle_keypress_action(modifier_key, ActionType::Press, action_string.clone());
+                thread::sleep(time::Duration::from_millis(delay_ms_before));
+            }
+
+            if let Some(mouse_button) = self.match_mouse_str_to_button(&action) {
+                // println!("pushing mouse action {:?}", &action);
+                self.handle_mouse_action(mouse_button, ActionType::Press);
+                self.holding_left_click_for_action = true;
+            } else if let Some(key_button) = self.match_key_str_to_key(&action) {
+                // This will not press again if another controller button is already holding this key
+                self.handle_keypress_action(key_button, ActionType::Press, action.clone());
+            }
+
+            if !modifier_already_held {
+                thread::sleep(time::Duration::from_millis(delay_ms_after));
+                self.handle_keypress_action(modifier_key, ActionType::Release, action_string);
+            }
+        } 
+        else if action_type == ActionType::Release {
+            if let Some(mouse_button) = self.match_mouse_str_to_button(&action) {
+                self.handle_mouse_action(mouse_button, ActionType::Release);
+                self.holding_left_click_for_action = false;
+            } else if let Some(key_button) = self.match_key_str_to_key(&action) {
+                // This will unpress even if another controller button is already holding this key
+                self.handle_keypress_action(key_button, ActionType::Release, action.clone());
+            }
+        } 
     }
 
     pub fn is_ability_key_held(&self) -> bool {
@@ -217,8 +254,8 @@ impl ActionHandler {
     }
     pub fn get_held_ability_actions(&self) -> Vec<String> {
         let mut held_ability_actions = Vec::<String>::new();
-        if self.middle_mouse_held {held_ability_actions.push("middleclick".to_owned());}
-        if self.right_mouse_held {held_ability_actions.push("rightclick".to_owned());}
+        if self.middle_mouse_held {held_ability_actions.push("MiddleClick".to_owned());}
+        if self.right_mouse_held {held_ability_actions.push("RightClick".to_owned());}
         if self.held_keys.contains_key(&Key::KeyQ) {held_ability_actions.push("q".to_owned());}
         if self.held_keys.contains_key(&Key::KeyW) {held_ability_actions.push("w".to_owned());}
         if self.held_keys.contains_key(&Key::KeyE) {held_ability_actions.push("e".to_owned());}
