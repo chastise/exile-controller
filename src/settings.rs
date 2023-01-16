@@ -3,7 +3,7 @@ use std::{collections::{HashMap, HashSet}, process::exit};
 use config::{Config, ConfigError};
 use native_dialog::MessageDialog;
 use serde::Deserialize;
-use crate::controller::input::ControllerTypeDetection;
+use crate::controller::{input::ControllerTypeDetection, action_manager::ActionDistance};
 
 #[derive(Clone, Deserialize)]
 pub struct OverlaySettings {
@@ -66,7 +66,7 @@ pub struct ApplicationSettings {
     #[serde(skip_deserializing)]
     ability_mapping_settings: HashMap<ButtonOrKey, gilrs::Button>,
     aimable_buttons: Vec<gilrs::Button>,
-    action_distances: HashMap<gilrs::Button, String>,
+    action_distances: HashMap<gilrs::Button, ActionDistance>,
     #[serde(rename(deserialize = "controller"))]
     controller_settings: ControllerSettings,
 }
@@ -76,7 +76,7 @@ impl ApplicationSettings {
     pub fn button_mapping_settings(&self) -> HashMap<gilrs::Button, ButtonOrKey> {self.button_mapping_settings.clone()}
     pub fn ability_mapping_settings(&self) -> HashMap<ButtonOrKey, gilrs::Button> {self.ability_mapping_settings.clone()}
     pub fn aimable_buttons(&self) -> Vec<gilrs::Button> {self.aimable_buttons.clone()}
-    pub fn action_distances(&self) -> HashMap<gilrs::Button, String> {self.action_distances.clone()}
+    pub fn action_distances(&self) -> HashMap<gilrs::Button, ActionDistance> {self.action_distances.clone()}
     pub fn controller_settings(&self) -> ControllerSettings {self.controller_settings.clone()}
 
     fn sanitize_settings(&mut self) {
@@ -96,9 +96,7 @@ impl ApplicationSettings {
                 gilrs::Button::LeftTrigger2,
                 gilrs::Button::RightTrigger2]);
 
-        let valid_ability_ranges: HashSet<String>= HashSet::from(["close", "mid", "far"].map(|x| x.to_owned()));
         let buttons: Vec<gilrs::Button> = self.action_distances.keys().cloned().collect();
-        let distances: Vec<String> = self.action_distances.values().cloned().collect();
 
         // Ensure ability ranges!
         for button in &buttons {
@@ -107,12 +105,7 @@ impl ApplicationSettings {
                 panic!("{:?} is not a valid button ({:#?})", button, valid_ability_buttons);
             }
         }
-        for distance in &distances {
-            if !valid_ability_ranges.contains(distance) {
-                alert_and_exit_on_invalid_settings(&format!("{:} is not a valid distance ({:#?})", distance, valid_ability_ranges));
-                panic!("{:} is not a valid distance ({:#?})", distance, valid_ability_ranges);
-            }
-        }
+
         // Ensure buttons are valid!
         let valid_buttons_set = HashSet::from(
             [

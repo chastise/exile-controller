@@ -6,7 +6,7 @@ use crate::settings::{ ApplicationSettings, ButtonOrKey};
 use super::input::{ControllerButton, AnalogStick};
 use super::action_handler::{ActionHandler, ActionType};
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, serde::Deserialize)]
 pub enum ActionDistance {
     Close,
     Mid,
@@ -264,12 +264,7 @@ impl ActionManager {
     fn get_ability_action_distance(&self, button: gilrs::Button) -> ActionDistance {
         if self.settings.action_distances().contains_key(&button) {
             // println!("herp {:?}", name);
-            match self.settings.action_distances().get(&button).unwrap().as_str() {
-                "close" => {ActionDistance::Close},
-                "mid" => {ActionDistance::Mid},
-                "far" => {ActionDistance::Far},
-                _ => {ActionDistance::None}
-            }
+            *self.settings.action_distances().get(&button).unwrap()
         } else {
             // println!("derp {:?}", name);
             ActionDistance::None}
