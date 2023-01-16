@@ -101,8 +101,6 @@ impl ActionHandler {
         // We can trust this lookup so long as we only call this function with known inputs. 
         // If inputs are user-specified, we must refactor to check them.
         let modifier_already_held = self.held_keys.contains_key(&modifier_key);
-        // let mut action_string = format!("{:#?}", modifier_key);
-        // action_string.push_str(&format!("{:#?}", action));
 
         if action_type == ActionType::Press {
             if !modifier_already_held {
