@@ -56,9 +56,6 @@ impl ActionManager {
 
     pub fn process_input_buttons(&mut self, named_controller_buttons: HashMap<gilrs::Button, &mut ControllerButton>) {
         for (action_name, button) in named_controller_buttons {
-            if button.just_pressed && button.just_unpressed {
-                panic!("This should never be possible!")
-            }
             if button.just_pressed {
                 println!("Just pressed {:?} ", action_name);
                 let can_be_aimed = self.settings.aimable_buttons().contains(&action_name);
@@ -70,9 +67,9 @@ impl ActionManager {
                                                     });
                 button.just_pressed = false;
             }
-            else if button.just_unpressed {
-                println!("Just unpressed {:?} ", action_name);
-                self.planned_actions.push(PlannedAction {name: action_name, 
+            if button.just_unpressed {
+                println!("Just unpressed {:?} ", &action_name);
+                self.planned_actions.push(PlannedAction {name: action_name.clone(), 
                                                         just_pressed: false, 
                                                         aimable: false, // Don't need this for unpress
                                                         distance: ActionDistance::None, // Don't need this for unpress
@@ -194,7 +191,7 @@ impl ActionManager {
         }
         if self.holding_walk {
             self.action_handler.handle_action(ActionType::Press, &ButtonOrKey::Button(rdev::Button::Left));
-        } else { // TODO: How does this work with held move skills? Might need to add "if not holding walk"
+        } else if !self.action_handler.holding_left_click_for_action() {
             self.action_handler.handle_action(ActionType::Release, &ButtonOrKey::Button(rdev::Button::Left));
         }
   

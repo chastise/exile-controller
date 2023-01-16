@@ -26,8 +26,7 @@ fn main() {
             );
 
     println!("Starting gamepad manager.");
-    let gamepad_manager = input::load_gamepad_manager(0.8_f32, 
-                                                                                    application_settings.controller_settings().controller_deadzone());
+    let gamepad_manager = input::load_gamepad_manager(application_settings.controller_settings().controller_deadzone());
     println!("Initializing action handler."); 
     let game_action_handler = action_manager::ActionManager::initialize(application_settings.clone(), GameWindowTracker::new(application_settings.clone()));
 

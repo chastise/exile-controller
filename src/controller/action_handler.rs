@@ -13,7 +13,8 @@ pub struct ActionHandler {
     left_mouse_held: bool,
     middle_mouse_held: bool,
     right_mouse_held: bool,
-    held_keys: HashMap<Key, String>
+    held_keys: HashMap<Key, String>,
+    holding_left_click_for_action: bool,
 }
 
 impl Default for ActionHandler {
@@ -23,6 +24,7 @@ impl Default for ActionHandler {
             middle_mouse_held: false,
             right_mouse_held: false,
             held_keys: HashMap::<Key, String>::with_capacity(20),
+            holding_left_click_for_action: false,
         }
     }
 }
@@ -31,12 +33,16 @@ impl ActionHandler {
     pub fn handle_action(&mut self, action_type: ActionType, action: &ButtonOrKey) {
         match action {
             ButtonOrKey::ButtonKeyChord(button, key) => {
-                self.handle_action_with_modifier_key(ButtonOrKey::Button(*button), ButtonOrKey::Key(*key), 20);
+                self.handle_action_with_modifier_key(action_type, *button, *key, 20, 10);
             }
             ButtonOrKey::Button(button) => self.handle_mouse_action(*button, action_type),
             ButtonOrKey::Key(key) => self.handle_keypress_action(*key, action_type),
             ButtonOrKey::Empty => (),
         }
+    }
+
+    pub fn holding_left_click_for_action(&self) -> bool {
+        self.holding_left_click_for_action
     }
 
     pub fn move_mouse(&self, x: f64, y: f64) {
@@ -91,12 +97,32 @@ impl ActionHandler {
         }
     }
 
-    fn handle_action_with_modifier_key(&mut self, action: ButtonOrKey, modifier: ButtonOrKey, delay_ms: u64) {
-        self.handle_action(ActionType::Press, &modifier);
-        thread::sleep(time::Duration::from_millis(delay_ms));
+    fn handle_action_with_modifier_key(&mut self, action_type: ActionType, action: rdev::Button, modifier_key: rdev::Key, delay_ms_before: u64, delay_ms_after: u64) {
+        // We can trust this lookup so long as we only call this function with known inputs. 
+        // If inputs are user-specified, we must refactor to check them.
+        let modifier_already_held = self.held_keys.contains_key(&modifier_key);
+        // let mut action_string = format!("{:#?}", modifier_key);
+        // action_string.push_str(&format!("{:#?}", action));
 
-        self.handle_action(ActionType::Press, &action);
-        self.handle_action(ActionType::Release, &modifier);
+        if action_type == ActionType::Press {
+            if !modifier_already_held {
+                self.handle_keypress_action(modifier_key, ActionType::Press);
+                thread::sleep(time::Duration::from_millis(delay_ms_before));
+            }
+            self.handle_mouse_action(action, ActionType::Press);
+            self.holding_left_click_for_action = true;
+            self.handle_keypress_action(modifier_key, ActionType::Press);
+
+            if !modifier_already_held {
+                thread::sleep(time::Duration::from_millis(delay_ms_after));
+                self.handle_keypress_action(modifier_key, ActionType::Release);
+            }
+        } 
+        else if action_type == ActionType::Release {
+            self.handle_mouse_action(action, ActionType::Release);
+            self.holding_left_click_for_action = false;
+            self.handle_keypress_action(modifier_key, ActionType::Release);
+        } 
     }
 
     pub fn is_ability_key_held(&self) -> bool {

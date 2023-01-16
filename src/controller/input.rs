@@ -11,17 +11,16 @@ pub struct ControllerButton {
 
 impl ControllerButton {
     fn changed_button_event(&mut self, value: f32) {
-        let just_pressed = value > 0.0;
-        self.just_pressed = just_pressed && !self.held;
-        self.just_unpressed = !just_pressed && self.held;
-        self.held = just_pressed;
+        let is_button_pressed = value > 0.0;
+        self.just_pressed = is_button_pressed && !self.held;
+        self.just_unpressed = !is_button_pressed && self.held;
+        self.held = is_button_pressed;
     }
 }
 
 // This intermediate struct lets everyone outside ControllerState treat trigger buttons like regular ControllerButtons
 #[derive(Default)]
 struct TriggerButton {
-    hold_amount: f32,
     trigger_threshold: f32,
     button: ControllerButton,
 }
@@ -32,10 +31,12 @@ impl TriggerButton {
     }
 
     fn changed_button_event(&mut self, value: f32) {
-        self.button.just_pressed = value >= self.trigger_threshold && self.hold_amount < self.trigger_threshold;
-        self.button.just_unpressed = value < self.trigger_threshold && self.hold_amount >= self.trigger_threshold;
-        self.button.held = self.button.just_pressed;
-        self.hold_amount = value;
+        let is_trigger_button_pressed = value >= self.trigger_threshold;
+        // Need to or these because trigger buttonchange events can collect more than once per frame
+        // So if just_un/pressed gets set to true, we need to preserve that long enough to call process_input_events
+        self.button.just_pressed = self.button.just_pressed || (is_trigger_button_pressed && !self.button.held); 
+        self.button.just_unpressed = self.button.just_unpressed || (!is_trigger_button_pressed && self.button.held);
+        self.button.held = is_trigger_button_pressed;
     }
 }
 
@@ -185,7 +186,7 @@ pub struct GamepadManager {
     pub controller_state: ControllerState,
 }
 
-pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f32) -> GamepadManager {
+pub fn load_gamepad_manager(analog_deadzone: f32) -> GamepadManager {
     let gilrs = Gilrs::new().unwrap();
 
     let mut gamepad_manager = GamepadManager{
@@ -203,6 +204,7 @@ pub fn load_gamepad_manager(gamepad_triggers_threshold: f32, analog_deadzone: f3
     }
 
     // initialize triggers and joy stick deadzones
+    let gamepad_triggers_threshold = 0.8_f32;
     gamepad_manager.controller_state.trigger_left.set_trigger_threshold(gamepad_triggers_threshold);
     gamepad_manager.controller_state.trigger_right.set_trigger_threshold(gamepad_triggers_threshold);
     gamepad_manager.controller_state.left_analog.analog_stick.set_joystick_deadzone(analog_deadzone);
