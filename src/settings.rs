@@ -57,18 +57,153 @@ pub enum ButtonOrKey {
     Empty,
 }
 
+fn string_to_buttonorkey (buttonorkey_string: &str) -> ButtonOrKey {
+    let lower = buttonorkey_string.to_lowercase();
+
+    // TODO(Samantha): Pattern matching here would be cleaner, but I don't think it's worth pulling in regex?
+    // These if guards check to see if we should be making a buttonkeychord.
+    if lower.ends_with("leftclick") && lower.len() > "leftclick".len() {
+        if let ButtonOrKey::Key(k) = string_to_buttonorkey(lower.trim_end_matches("leftclick")) {
+            return ButtonOrKey::ButtonKeyChord(rdev::Button::Left, k);
+        }
+    }
+    if lower.ends_with("rightclick") && lower.len() > "rightclick".len(){
+        if let ButtonOrKey::Key(k) = string_to_buttonorkey(lower.trim_end_matches("rightclick")) {
+            return ButtonOrKey::ButtonKeyChord(rdev::Button::Right, k);
+        }
+    }
+    if lower.ends_with("middleclick") && lower.len() > "middleclick".len(){
+        if let ButtonOrKey::Key(k) = string_to_buttonorkey(lower.trim_end_matches("middleclick")) {
+            return ButtonOrKey::ButtonKeyChord(rdev::Button::Middle, k);
+        }
+    }
+
+    match lower.as_str() {
+        "leftclick" => ButtonOrKey::Button(rdev::Button::Left),
+        "middleclick" => ButtonOrKey::Button(rdev::Button::Middle),
+        "rightclick" => ButtonOrKey::Button(rdev::Button::Right),
+        "f1" => ButtonOrKey::Key(rdev::Key::F1),
+        "f2" => ButtonOrKey::Key(rdev::Key::F2),
+        "f3" => ButtonOrKey::Key(rdev::Key::F3),
+        "f4" => ButtonOrKey::Key(rdev::Key::F4),
+        "f5" => ButtonOrKey::Key(rdev::Key::F5),
+        "f6" => ButtonOrKey::Key(rdev::Key::F6),
+        "f7" => ButtonOrKey::Key(rdev::Key::F7),
+        "f8" => ButtonOrKey::Key(rdev::Key::F8),
+        "f9" => ButtonOrKey::Key(rdev::Key::F9),
+        "f10" => ButtonOrKey::Key(rdev::Key::F10),
+        "f11" => ButtonOrKey::Key(rdev::Key::F11),
+        "f12" => ButtonOrKey::Key(rdev::Key::F12),
+        "a" => ButtonOrKey::Key(rdev::Key::KeyA),
+        "b" => ButtonOrKey::Key(rdev::Key::KeyB),
+        "c" => ButtonOrKey::Key(rdev::Key::KeyC),
+        "d" => ButtonOrKey::Key(rdev::Key::KeyD),
+        "e" => ButtonOrKey::Key(rdev::Key::KeyE),
+        "f" => ButtonOrKey::Key(rdev::Key::KeyF),
+        "g" => ButtonOrKey::Key(rdev::Key::KeyG),
+        "h" => ButtonOrKey::Key(rdev::Key::KeyH),
+        "i" => ButtonOrKey::Key(rdev::Key::KeyI),
+        "j" => ButtonOrKey::Key(rdev::Key::KeyJ),
+        "k" => ButtonOrKey::Key(rdev::Key::KeyK),
+        "l" => ButtonOrKey::Key(rdev::Key::KeyL),
+        "m" => ButtonOrKey::Key(rdev::Key::KeyM),
+        "n" => ButtonOrKey::Key(rdev::Key::KeyN),
+        "o" => ButtonOrKey::Key(rdev::Key::KeyO),
+        "p" => ButtonOrKey::Key(rdev::Key::KeyP),
+        "q" => ButtonOrKey::Key(rdev::Key::KeyQ),
+        "r" => ButtonOrKey::Key(rdev::Key::KeyR),
+        "s" => ButtonOrKey::Key(rdev::Key::KeyS),
+        "t" => ButtonOrKey::Key(rdev::Key::KeyT),
+        "u" => ButtonOrKey::Key(rdev::Key::KeyU),
+        "v" => ButtonOrKey::Key(rdev::Key::KeyV),
+        "w" => ButtonOrKey::Key(rdev::Key::KeyW),
+        "x" => ButtonOrKey::Key(rdev::Key::KeyX),
+        "y" => ButtonOrKey::Key(rdev::Key::KeyY),
+        "z" => ButtonOrKey::Key(rdev::Key::KeyZ),
+        "0" => ButtonOrKey::Key(rdev::Key::Num0),
+        "1" => ButtonOrKey::Key(rdev::Key::Num1),
+        "2" => ButtonOrKey::Key(rdev::Key::Num2),
+        "3" => ButtonOrKey::Key(rdev::Key::Num3),
+        "4" => ButtonOrKey::Key(rdev::Key::Num4),
+        "5" => ButtonOrKey::Key(rdev::Key::Num5),
+        "6" => ButtonOrKey::Key(rdev::Key::Num6),
+        "7" => ButtonOrKey::Key(rdev::Key::Num7),
+        "8" => ButtonOrKey::Key(rdev::Key::Num8),
+        "9" => ButtonOrKey::Key(rdev::Key::Num9),
+        "`" => ButtonOrKey::Key(rdev::Key::BackQuote),
+        "[" => ButtonOrKey::Key(rdev::Key::LeftBracket),
+        "]" => ButtonOrKey::Key(rdev::Key::RightBracket),
+        ";" => ButtonOrKey::Key(rdev::Key::SemiColon),
+        "/" => ButtonOrKey::Key(rdev::Key::Slash),
+        "," => ButtonOrKey::Key(rdev::Key::Comma),
+        "=" => ButtonOrKey::Key(rdev::Key::Equal),
+        "escape" => ButtonOrKey::Key(rdev::Key::Escape),
+        "space" => ButtonOrKey::Key(rdev::Key::Space),
+        "tab" => ButtonOrKey::Key(rdev::Key::Tab),
+        "backspace" => ButtonOrKey::Key(rdev::Key::Backspace),
+        "delete" => ButtonOrKey::Key(rdev::Key::Delete),
+        "uparrow" => ButtonOrKey::Key(rdev::Key::UpArrow),
+        "downarrow" => ButtonOrKey::Key(rdev::Key::DownArrow),
+        "leftarrow" => ButtonOrKey::Key(rdev::Key::LeftArrow),
+        "rightarrow" => ButtonOrKey::Key(rdev::Key::RightArrow),
+        "alt" => ButtonOrKey::Key(rdev::Key::Alt),
+        "shift" => ButtonOrKey::Key(rdev::Key::ShiftLeft),
+        "control" => ButtonOrKey::Key(rdev::Key::ControlLeft),
+        "" => ButtonOrKey::Empty,
+        _ => panic!("Unrecognized button or key: {:}!", buttonorkey_string.to_lowercase().as_str()),
+    }
+}
+
 #[derive(Clone, Deserialize)]
 pub struct ApplicationSettings {
     #[serde(rename(deserialize = "overlay"))]
     overlay_settings: OverlaySettings,
+
+    // TODO(Samantha): See if we can't pass the functions to turn the user friendly strings into their proper types into the config loader.
+    // These duplicated fields are intermediaries to load the config values into their concrete types.
     #[serde(rename(deserialize = "button_mapping"))]
+    button_mapping_settings_strings: HashMap<String, String>,
+    #[serde(skip_deserializing)]
     button_mapping_settings: HashMap<gilrs::Button, ButtonOrKey>,
+
     #[serde(skip_deserializing)]
     ability_mapping_settings: HashMap<ButtonOrKey, gilrs::Button>,
+
+    #[serde(rename(deserialize = "aimable_buttons"))]
+    aimable_buttons_strings: Vec<String>,
+    #[serde(skip_deserializing)]
     aimable_buttons: Vec<gilrs::Button>,
+
+    #[serde(rename(deserialize = "action_distances"))]
+    action_distances_strings: HashMap<String, ActionDistance>,
+    #[serde(skip_deserializing)]
     action_distances: HashMap<gilrs::Button, ActionDistance>,
+
     #[serde(rename(deserialize = "controller"))]
     controller_settings: ControllerSettings,
+}
+
+fn string_to_controller_button(button_str: &str) -> gilrs::Button {
+    match button_str.to_lowercase().as_str() {
+        // We attempt to allow for different names of buttons.
+        "a" | "cross" => gilrs::Button::South,
+        "b" | "circle" => gilrs::Button::East,
+        "x" | "square" => gilrs::Button::West,
+        "y" | "triangle" => gilrs::Button::North,
+        "start" | "options" => gilrs::Button::Start,
+        "back" | "select" | "share" => gilrs::Button::Select,
+        "dpad_down" => gilrs::Button::DPadDown,
+        "dpad_left" => gilrs::Button::DPadLeft,
+        "dpad_right" => gilrs::Button::DPadRight,
+        "dpad_up" => gilrs::Button::DPadUp,
+        "left_analog" | "l3" => gilrs::Button::LeftThumb,
+        "right_analog" | "r3" => gilrs::Button::RightThumb,
+        "bumper_left" | "l1" => gilrs::Button::LeftTrigger,
+        "bumper_right" | "r1" => gilrs::Button::RightTrigger,
+        "trigger_left" | "l2" => gilrs::Button::LeftTrigger2,
+        "trigger_right" | "r2" => gilrs::Button::RightTrigger2,
+        _ => gilrs::Button::Unknown,
+    }
 }
 
 impl ApplicationSettings {
@@ -95,6 +230,20 @@ impl ApplicationSettings {
                 gilrs::Button::RightTrigger,
                 gilrs::Button::LeftTrigger2,
                 gilrs::Button::RightTrigger2]);
+
+        // Finish deserializing these from strings into their concrete types.
+        self.action_distances = HashMap::from_iter(
+            self.action_distances_strings.iter()
+            .map(|(button_string, distance)|
+                (string_to_controller_button(button_string), distance.clone())));
+
+        self.button_mapping_settings = HashMap::from_iter(
+            self.button_mapping_settings_strings.iter()
+            .map(|(key, value)|
+            (string_to_controller_button(key), string_to_buttonorkey(value))));
+
+        self.aimable_buttons = self.aimable_buttons_strings.iter()
+            .map(|button| string_to_controller_button(button)).collect();
 
         let buttons: Vec<gilrs::Button> = self.action_distances.keys().cloned().collect();
 
