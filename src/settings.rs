@@ -150,7 +150,10 @@ fn string_to_buttonorkey (buttonorkey_string: &str) -> ButtonOrKey {
         "shift" => ButtonOrKey::Key(rdev::Key::ShiftLeft),
         "control" => ButtonOrKey::Key(rdev::Key::ControlLeft),
         "" => ButtonOrKey::Empty,
-        _ => panic!("Unrecognized button or key: {:}!", buttonorkey_string.to_lowercase().as_str()),
+        _ => {
+            alert_and_exit_on_invalid_settings(&format!("Unrecognized mouse button or key: {:}!", buttonorkey_string.to_lowercase().as_str()));
+            panic!("Unrecognized mouse button or key: {:}!", buttonorkey_string.to_lowercase().as_str());
+        },
     }
 }
 
