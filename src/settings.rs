@@ -53,7 +53,7 @@ impl ControllerSettings {
 pub enum ButtonOrKey {
     Button(rdev::Button),
     Key(rdev::Key),
-    ButtonKeyChord(rdev::Button, rdev::Key),
+    ButtonKeyCombo(rdev::Button, rdev::Key),
     Empty,
 }
 
@@ -64,17 +64,17 @@ fn string_to_buttonorkey (buttonorkey_string: &str) -> ButtonOrKey {
     // These if guards check to see if we should be making a buttonkeychord.
     if lower.ends_with("leftclick") && lower.len() > "leftclick".len() {
         if let ButtonOrKey::Key(k) = string_to_buttonorkey(lower.trim_end_matches("leftclick")) {
-            return ButtonOrKey::ButtonKeyChord(rdev::Button::Left, k);
+            return ButtonOrKey::ButtonKeyCombo(rdev::Button::Left, k);
         }
     }
     if lower.ends_with("rightclick") && lower.len() > "rightclick".len(){
         if let ButtonOrKey::Key(k) = string_to_buttonorkey(lower.trim_end_matches("rightclick")) {
-            return ButtonOrKey::ButtonKeyChord(rdev::Button::Right, k);
+            return ButtonOrKey::ButtonKeyCombo(rdev::Button::Right, k);
         }
     }
     if lower.ends_with("middleclick") && lower.len() > "middleclick".len(){
         if let ButtonOrKey::Key(k) = string_to_buttonorkey(lower.trim_end_matches("middleclick")) {
-            return ButtonOrKey::ButtonKeyChord(rdev::Button::Middle, k);
+            return ButtonOrKey::ButtonKeyCombo(rdev::Button::Middle, k);
         }
     }
 

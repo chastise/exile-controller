@@ -32,7 +32,7 @@ impl Default for ActionHandler {
 impl ActionHandler {
     pub fn handle_action(&mut self, action_type: ActionType, action: &ButtonOrKey) {
         match action {
-            ButtonOrKey::ButtonKeyChord(button, key) => {
+            ButtonOrKey::ButtonKeyCombo(button, key) => {
                 self.handle_action_with_modifier_key(action_type, *button, *key, 20, 10);
             }
             ButtonOrKey::Button(button) => self.handle_mouse_action(*button, action_type),
