@@ -5,8 +5,8 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-config = "0.13.3"
-serde = "1.0.228"
+config = "0.15.19"
+serde = {version = "1.0.228", features = ["derive"]}
 gilrs = {version ="0.11.0", default-features = false, features = ["xinput"]}
 rdev = "0.5.3"
 active-win-pos-rs = "0.9.1"
