@@ -1,7 +1,7 @@
 use std::{collections::{HashMap, HashSet}, process::exit};
 
 use config::{Config, ConfigError};
-use native_dialog::MessageDialog;
+use native_dialog::DialogBuilder;
 use serde::Deserialize;
 use crate::controller::input::ControllerTypeDetection;
 
@@ -176,11 +176,19 @@ pub fn alert_and_exit_on_invalid_settings(error_message: &str) {
     // Uncomment this if you want panics instead of popups while debugging
     // #![cfg(not(debug_assertions))]
     {
-        MessageDialog::new()
-        .set_type(native_dialog::MessageType::Info)
+        DialogBuilder::message() 
+        // {
+        //     title:"Invalid configuration".to_string(),
+        //     text:error_message.to_string(),
+        //     level:native_dialog::MessageLevel::Info,
+        //     owner:None
+        // }
+        .set_level(native_dialog::MessageLevel::Info)
         .set_title("Invalid configuration")
         .set_text(error_message)
-        .show_alert()
+        // .confirm()
+        .alert()
+        .show()
         .unwrap();
     
         exit(78);

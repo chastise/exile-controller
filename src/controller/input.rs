@@ -215,7 +215,7 @@ pub fn load_gamepad_manager(analog_deadzone: f32) -> GamepadManager {
 
 impl GamepadManager {
     pub fn process_gamepad_events(&mut self) {
-        while let Some(Event { id, event, time: _ }) = self.gilrs_context.next_event() {
+        while let Some(Event { id, event, time: _ , .. }) = self.gilrs_context.next_event() {
             match self.gamepad_id {
                 Some(gamepad_id) => {
                     if id == gamepad_id {
