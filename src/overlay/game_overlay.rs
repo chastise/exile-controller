@@ -1,16 +1,21 @@
 use std::process::exit;
 
-use super::egui_overlay;
+use egui_backend::egui;
+use egui_backend::egui::{Area, Color32, Context, epaint, Pos2, Rect, Vec2};
+
+use egui_overlay::EguiOverlay;
+
+#[cfg(not(target_os = "macos"))]
+use egui_overlay::egui_render_three_d::ThreeDBackend as DefaultGfxBackend;
+#[cfg(target_os = "macos")]
+use egui_render_wgpu::WgpuBackend as DefaultGfxBackend;
+
+use egui_extras::RetainedImage;
+
 use crate::controller::action_manager::ActionManager;
 use crate::controller::input::{GamepadManager, ControllerType};
 use crate::game_window_tracker::GameWindowTracker;
 use crate::settings::{OverlaySettings, ControllerSettings};
-
-use egui::{Vec2, Context, epaint, Color32};
-use egui_backend::{egui, UserApp};
-use egui_backend::egui::{Rect, Pos2};
-use crate::overlay::egui_render_wgpu::egui_render_wgpu::WgpuBackend;
-use egui_extras::RetainedImage;
 
 use std::fs;
 
@@ -102,8 +107,8 @@ struct GameOverlay {
 }
 
 impl GameOverlay {
-    fn place_overlay_image(&self, ctx: &Context, image: &RetainedImage, position: Pos2, id_source: &str) {
-        egui_backend::egui::Area::new(id_source)
+    fn place_overlay_image(&self, ctx: &Context, image: &RetainedImage, position: Pos2, id_source: String) {
+        egui_backend::egui::Area::new(id_source.clone())
                                     .movable(false)
                                     .fixed_pos(position)
                                     .interactable(false)
@@ -121,19 +126,19 @@ impl GameOverlay {
         self.place_overlay_image(ctx, &images.button_face_left.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*3.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-                       "button_face_left");
+                       "button_face_left".to_string());
         self.place_overlay_image(ctx, &images.button_face_down.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*2.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-                        "button_face_down");
+                        "button_face_down".to_string());
         self.place_overlay_image(ctx, &images.button_face_right.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*1.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-                        "button_face_right");
+                        "button_face_right".to_string());
         self.place_overlay_image(ctx, &images.button_face_up.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-                        "button_face_up");
+                        "button_face_up".to_string());
     }
 
     fn place_flask_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
@@ -145,23 +150,23 @@ impl GameOverlay {
         self.place_overlay_image(ctx, &images.button_d_left.choose_image(controller_type),
             Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*4.0) + self.game_window_tracker.window_pos_x(), 
                 y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-           "button_d_left");
+           "button_d_left".to_string());
         self.place_overlay_image(ctx, &images.button_d_down.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*3.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-                       "button_d_down");
+                       "button_d_down".to_string());
         self.place_overlay_image(ctx, &images.button_d_right.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*2.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-                        "button_d_right");
+                        "button_d_right".to_string());
         self.place_overlay_image(ctx, &images.button_d_up.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*1.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-                        "button_d_up");
+                        "button_d_up".to_string());
         self.place_overlay_image(ctx, &images.button_r3.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-                        "button_r3");
+                        "button_r3".to_string());
     }
 
     fn place_mouse_button_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
@@ -173,15 +178,15 @@ impl GameOverlay {
         self.place_overlay_image(ctx, &images.left_stick.choose_image(controller_type),
             Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*2.0) + self.game_window_tracker.window_pos_x(), 
                 y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-            "left_stick");
+            "left_stick".to_string());
         self.place_overlay_image(ctx, &images.button_bumper_left.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*1.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-                       "button_bumper_left");
+                       "button_bumper_left".to_string());
         self.place_overlay_image(ctx, &images.button_bumper_right.choose_image(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
-                        "button_bumper_right");
+                        "button_bumper_right".to_string());
     }
 
     fn paint_crosshair (&self, ctx: &Context) {
@@ -189,14 +194,14 @@ impl GameOverlay {
         // offset radius*2.0 because the paint area is radius * 4 across
         let crosshair_position = Pos2 { x: (self.game_window_tracker.game_window_width() / 2.0) - self.controller_settings.character_x_offset_px() - crosshair_radius*2.0  + self.game_window_tracker.window_pos_x(), 
                                                 y: (self.game_window_tracker.game_window_height() / 2.0) - self.controller_settings.character_y_offset_px() - crosshair_radius*2.0 + self.game_window_tracker.window_pos_y()};
-        egui::Area::new("crosshair")
+        Area::new("crosshair")
                         .movable(false)
                         .fixed_pos(crosshair_position)
                         .interactable(false)
                         .show(ctx,|ui| {
                             let paint_size = Vec2::splat(crosshair_radius * 4.0);
                             let (response, painter) = ui.allocate_painter(paint_size, egui::Sense::hover());
-                            painter.circle_stroke( response.rect.center(), crosshair_radius,  egui::Stroke{width:2.0, color:egui::Color32::RED});
+                            painter.circle_stroke( response.rect.center(), crosshair_radius,  egui::Stroke{width:2.0, color: Color32::RED});
                         });
     }
 
@@ -313,12 +318,12 @@ impl GameOverlay {
     }
 }
 
-impl UserApp<egui_window_glfw_passthrough::GlfwWindow, WgpuBackend> for GameOverlay {
-    fn run(
+impl EguiOverlay for GameOverlay {
+    fn gui_run(
         &mut self,
-        egui_context: &egui_backend::egui::Context,
-        glfw_backend: &mut egui_window_glfw_passthrough::GlfwWindow,
-        _: &mut WgpuBackend,
+        egui_context: &Context,
+        _default_gfx_backend_: &mut DefaultGfxBackend,
+        glfw_backend: &mut egui_overlay::egui_window_glfw_passthrough::GlfwBackend,
     ) {
         glfw_backend.window.set_size(self.overlay_settings.screen_width() as i32, self.overlay_settings.screen_height() as i32);
         glfw_backend.window.set_resizable(false);
@@ -389,5 +394,5 @@ pub fn start_overlay(overlay_settings: OverlaySettings, controller_settings: Con
         game_input_started: false,
     };
 
-    egui_overlay::start_egui_overlay(game_overlay, screen_width as i32, screen_height as i32);
+    egui_overlay::start(game_overlay);
 }
