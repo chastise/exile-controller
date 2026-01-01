@@ -13,12 +13,11 @@ active-win-pos-rs = "0.9.1"
 native-dialog = "0.9.4"
 
 # egui
-# egui = "0.29.0"
-egui_backend = { version = "0.4.0", features = ["egui_bytemuck"] }
-egui_overlay = "0.4.1"
-egui_extras = {version = "0.22.0", features = ["image"]}
-image = { version = "0.24.7", features = ["png"] }
-# egui_window_glfw_passthrough = "0.9.0"
+egui = "0.29"
+egui_overlay = { version = "0.9.0", features = ['three_d']}
+egui_extras = {version = "0.29", features = ["all_loaders"]}
+image = { version = "0.25", features = ["png"] }
+egui_window_glfw_passthrough = "0.9.0"
 
 
 [target.'cfg(windows)'.build-dependencies]

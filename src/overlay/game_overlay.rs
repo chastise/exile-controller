@@ -1,38 +1,36 @@
 use std::process::exit;
 
-use egui_backend::egui;
-use egui_backend::egui::{Area, Color32, Context, epaint, Pos2, Rect, Vec2};
+use egui;
+use egui::{Area, Color32, epaint, Pos2, Rect, Vec2};
+use egui::Context;
 
-use egui_overlay::EguiOverlay;
+// use egui_overlay::EguiOverlay;
+use crate::overlay::overlay_backend::{self, EguiOverlay};
 
-#[cfg(not(target_os = "macos"))]
 use egui_overlay::egui_render_three_d::ThreeDBackend as DefaultGfxBackend;
-#[cfg(target_os = "macos")]
-use egui_render_wgpu::WgpuBackend as DefaultGfxBackend;
 
-use egui_extras::RetainedImage;
+use egui_extras;
 
 use crate::controller::action_manager::ActionManager;
 use crate::controller::input::{GamepadManager, ControllerType};
 use crate::game_window_tracker::GameWindowTracker;
 use crate::settings::{OverlaySettings, ControllerSettings};
 
-use std::fs;
-
 struct ControllerImage {
-    playstation: RetainedImage,
-    xbox: RetainedImage,
+    playstation: String,
+    xbox: String,
 }
 
 impl ControllerImage {
-    fn new(debug_name: &str, playstation: &str, xbox: &str) -> Self {
+    fn new(playstation: &str, xbox: &str) -> Self {
         Self {
             // TODO(Samantha): Consider not unwrappiner here, although panic makes sense if we can't load the image.
-            playstation: RetainedImage::from_image_bytes(debug_name, &fs::read(playstation).unwrap()).unwrap(),
-            xbox: RetainedImage::from_image_bytes(debug_name, &fs::read(xbox).unwrap()).unwrap(),
+            // playstation: RetainedImage::from_image_bytes(debug_name, &fs::read(playstation).unwrap()).unwrap(),
+            playstation: playstation.to_string(),
+            xbox: xbox.to_string(),
         }
     }
-    fn choose_image(&self, controller_type: ControllerType) -> &RetainedImage {
+    fn choose_image(&self, controller_type: ControllerType) -> &String {
         match controller_type {
             ControllerType::Playstation => &self.playstation,
             ControllerType::Xbox => &self.xbox,
@@ -67,26 +65,26 @@ struct OverlayImages {
 impl Default for OverlayImages {
     fn default() -> Self {
         Self {
-            button_d_up: ControllerImage::new("dpad_up.png", "img/playstation/dpad_up.png", "img/xbox/dpad_up.png"),
-            button_d_down: ControllerImage::new("dpad_down.png", "img/playstation/dpad_down.png", "img/xbox/dpad_down.png"),
-            button_d_left: ControllerImage::new("dpad_left.png", "img/playstation/dpad_left.png", "img/xbox/dpad_left.png"),
-            button_d_right: ControllerImage::new("dpad_right.png", "img/playstation/dpad_right.png", "img/xbox/dpad_right.png"),
+            button_d_up: ControllerImage::new("file://img/playstation/dpad_up.png", "file://img/xbox/dpad_up.png"),
+            button_d_down: ControllerImage::new("file://img/playstation/dpad_down.png", "file://img/xbox/dpad_down.png"),
+            button_d_left: ControllerImage::new("file://img/playstation/dpad_left.png", "file://img/xbox/dpad_left.png"),
+            button_d_right: ControllerImage::new("file://img/playstation/dpad_right.png", "file://img/xbox/dpad_right.png"),
 
-            button_face_down: ControllerImage::new("button_a.png", "img/playstation/ps_button_x.png",  "img/xbox/xb_button_a.png"),
-            button_face_right: ControllerImage::new("button_b.png", "img/playstation/ps_button_o.png", "img/xbox/xb_button_b.png"),
-            button_face_left: ControllerImage::new("button_x.png", "img/playstation/ps_button_sq.png", "img/xbox/xb_button_x.png"),
-            button_face_up: ControllerImage::new("button_y.png", "img/playstation/ps_button_tri.png", "img/xbox/xb_button_y.png"),
+            button_face_down: ControllerImage::new("file://img/playstation/ps_button_x.png",  "file://img/xbox/xb_button_a.png"),
+            button_face_right: ControllerImage::new("file://img/playstation/ps_button_o.png", "file://img/xbox/xb_button_b.png"),
+            button_face_left: ControllerImage::new("file://img/playstation/ps_button_sq.png", "file://img/xbox/xb_button_x.png"),
+            button_face_up: ControllerImage::new("file://img/playstation/ps_button_tri.png", "file://img/xbox/xb_button_y.png"),
 
-            button_bumper_left: ControllerImage::new("lb.png", "img/playstation/ps_lb.png",  "img/xbox/xb_lb.png"),
-            button_bumper_right: ControllerImage::new("rb.png", "img/playstation/ps_rb.png", "img/xbox/xb_rb.png"),
-            // button_trigger_left: ControllerImage::new("lt.png", "img/playstation/ps_lt.png", "img/xbox/xb_lt.png"),
-            // button_trigger_right: ControllerImage::new("rb.png", "img/playstation/ps_rb.png", "img/xbox/xb_rb.png"),
+            button_bumper_left: ControllerImage::new("file://img/playstation/ps_lb.png",  "file://img/xbox/xb_lb.png"),
+            button_bumper_right: ControllerImage::new("file://img/playstation/ps_rb.png", "file://img/xbox/xb_rb.png"),
+            // button_trigger_left: ControllerImage::new("file://img/playstation/ps_lt.png", "file://img/xbox/xb_lt.png"),
+            // button_trigger_right: ControllerImage::new("file://img/playstation/ps_rb.png", "file://img/xbox/xb_rb.png"),
 
-            left_stick: ControllerImage::new("left_analog.png", "img/playstation/left_analog.png", "img/xbox/left_analog.png"),
-            // right_stick: ControllerImage::new("right_analog.png", "img/playstation/right_analog.png", "img/xbox/right_analog.png"),
+            left_stick: ControllerImage::new("file://img/playstation/left_analog.png", "file://img/xbox/left_analog.png"),
+            // right_stick: ControllerImage::new("file://img/playstation/right_analog.png", "file://img/xbox/right_analog.png"),
 
-            // button_l3: ControllerImage::new("button_l3.png", "img/playstation/button_l3.png", "img/xbox/button_l3.png"),
-            button_r3: ControllerImage::new("button_r3.png", "img/playstation/button_r3.png", "img/xbox/button_r3.png"),
+            // button_l3: ControllerImage::new("file://img/playstation/button_l3.png", "file://img/xbox/button_l3.png"),
+            button_r3: ControllerImage::new("file://img/playstation/button_r3.png", "file://img/xbox/button_r3.png"),
         }
     }
 }
@@ -107,14 +105,15 @@ struct GameOverlay {
 }
 
 impl GameOverlay {
-    fn place_overlay_image(&self, ctx: &Context, image: &RetainedImage, position: Pos2, id_source: String) {
-        egui_backend::egui::Area::new(id_source.clone())
-                                    .movable(false)
-                                    .fixed_pos(position)
-                                    .interactable(false)
-                                    .show(ctx,|ui| {
-                                        ui.image(image.texture_id(ctx), image.size_vec2());
-                                    });
+    fn place_overlay_image(&self, ctx: &Context, image_path: &String, position: Pos2, id_source: String) {
+        egui::Area::new(egui::Id::new(id_source.clone()))
+                        .movable(false)
+                        .fixed_pos(position)
+                        .interactable(false)
+                        .default_size(Vec2 { x: 32.0, y: 32.0 })
+                        .show(ctx,|ui| {
+                            ui.image(image_path)
+                        });
     }
 
     fn place_face_overlay_images (&self, ctx: &Context, images: &OverlayImages) {
@@ -194,7 +193,7 @@ impl GameOverlay {
         // offset radius*2.0 because the paint area is radius * 4 across
         let crosshair_position = Pos2 { x: (self.game_window_tracker.game_window_width() / 2.0) - self.controller_settings.character_x_offset_px() - crosshair_radius*2.0  + self.game_window_tracker.window_pos_x(), 
                                                 y: (self.game_window_tracker.game_window_height() / 2.0) - self.controller_settings.character_y_offset_px() - crosshair_radius*2.0 + self.game_window_tracker.window_pos_y()};
-        Area::new("crosshair")
+        Area::new(egui::Id::new("crosshair"))
                         .movable(false)
                         .fixed_pos(crosshair_position)
                         .interactable(false)
@@ -220,7 +219,7 @@ impl GameOverlay {
 
     
         let mut gui_visuals = ctx.style().visuals.clone();
-        gui_visuals.window_shadow = epaint::Shadow{extrusion: 0.0, color: Color32::DARK_GRAY};
+        gui_visuals.window_shadow = epaint::Shadow{offset: Vec2 { x: (0.0), y: (0.0) }, blur: 0.0, spread: 0.0, color: Color32::DARK_GRAY};
         gui_visuals.widgets.noninteractive.bg_stroke = epaint::Stroke {width: 1.5, color: Color32::from_rgb(138, 90, 62)};
         gui_visuals.widgets.inactive.bg_stroke = epaint::Stroke {width: 1.0, color: Color32::from_rgb(100,100,100)};
         gui_visuals.widgets.noninteractive.fg_stroke = epaint::Stroke {width: 1.0, color: Color32::from_rgb(215,210,210)};
@@ -238,7 +237,7 @@ impl GameOverlay {
             new_pos = egui::Window::new(egui::RichText::new("Exile Controller").color(Color32::from_rgb(227, 117, 0)).strong())
                                     .resizable(false)
                                     .current_pos(self.remote_pos)
-                                    .drag_bounds(self.window_rect)
+                                    .constrain_to(self.window_rect)
                                     .collapsible(false)
                                     .show(ctx,|ui| {
                                         egui::Grid::new("Remote Grid ID").min_col_width(220.0).show(ui, |ui| {
@@ -277,7 +276,7 @@ impl GameOverlay {
             new_pos =  egui::Window::new("Exile Controller Minimized Remote")
                                     .resizable(false)
                                     .current_pos(self.remote_pos)
-                                    .drag_bounds(self.window_rect)
+                                    .constrain_to(self.window_rect)
                                     .title_bar(false)
                                     .show(ctx,|ui| {
                                         egui::Grid::new("Pause Grid ID").min_col_width(220.0).show(ui, |ui| {
@@ -325,9 +324,10 @@ impl EguiOverlay for GameOverlay {
         _default_gfx_backend_: &mut DefaultGfxBackend,
         glfw_backend: &mut egui_overlay::egui_window_glfw_passthrough::GlfwBackend,
     ) {
+        egui_extras::install_image_loaders(egui_context);
+
+        // Sets a GLFW window to the size of screen 1, egui's overlay window is updated later
         glfw_backend.window.set_size(self.overlay_settings.screen_width() as i32, self.overlay_settings.screen_height() as i32);
-        glfw_backend.window.set_resizable(false);
-        glfw_backend.window.set_decorated(false);
         glfw_backend.window.set_pos(0, 0);
 
         self.draw_remote(egui_context);
@@ -375,10 +375,15 @@ impl EguiOverlay for GameOverlay {
         } else {
             glfw_backend.window.set_mouse_passthrough(true);
         }
+        egui_context.request_repaint();
     }
 }
 
-pub fn start_overlay(overlay_settings: OverlaySettings, controller_settings: ControllerSettings, gamepad_manager: GamepadManager, game_action_handler: ActionManager, game_window_tracker: GameWindowTracker) {
+pub fn start_overlay(overlay_settings: OverlaySettings, 
+                     controller_settings: ControllerSettings, 
+                     gamepad_manager: GamepadManager,
+                     game_action_handler: ActionManager, 
+                     game_window_tracker: GameWindowTracker) {
     let screen_width = overlay_settings.screen_width();
     let screen_height = overlay_settings.screen_height();
     let game_overlay = GameOverlay{
@@ -393,6 +398,6 @@ pub fn start_overlay(overlay_settings: OverlaySettings, controller_settings: Con
         remote_pos: Pos2 { x: screen_width / 2.0 , y: screen_height / 16.0 },
         game_input_started: false,
     };
-
-    egui_overlay::start(game_overlay);
+    
+    overlay_backend::start(game_overlay);
 }

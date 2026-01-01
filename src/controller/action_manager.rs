@@ -99,7 +99,7 @@ impl ActionManager {
 
     pub fn update_window_tracker (&mut self) {self.game_window_tracker.update_window_tracker()}
 
-    pub fn handle_character_actions(&mut self, ctx: &egui_backend::egui::Context) {
+    pub fn handle_character_actions(&mut self, ctx: &egui::Context) {
         let mut set_cursor = false;
 
         // Execute planned actions
@@ -250,7 +250,7 @@ impl ActionManager {
         }
     }
 
-    fn get_free_move_update(&self, ctx: &egui_backend::egui::Context) -> (f64, f64){
+    fn get_free_move_update(&self, ctx: &egui::Context) -> (f64, f64){
         let screen_adjustment_x = self.aiming_stick_direction[0] * self.settings.controller_settings().free_mouse_sensitivity_px() ;
         let screen_adjustment_y = -1.0 * self.aiming_stick_direction[1] * self.settings.controller_settings().free_mouse_sensitivity_px();
         // There is a chance that there _is_ no mouse position.
