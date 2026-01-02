@@ -1,13 +1,17 @@
 use std::process::exit;
 
 use egui;
-use egui::{Area, Color32, epaint, Pos2, Rect, Vec2};
-use egui::Context;
+use egui::{Area, Color32, Context, epaint, Pos2, Rect, Vec2};
 
 // use egui_overlay::EguiOverlay;
 use crate::overlay::overlay_backend::{self, EguiOverlay};
 
+#[cfg(not(target_os = "macos"))]
 use egui_overlay::egui_render_three_d::ThreeDBackend as DefaultGfxBackend;
+
+// Mac is not supported until wgpu dependencies get fixed by several crates with pinned incompatible versions
+// #[cfg(target_os = "macos")]
+// use egui_render_wgpu::WgpuBackend as DefaultGfxBackend;
 
 use egui_extras;
 

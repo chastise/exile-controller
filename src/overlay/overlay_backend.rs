@@ -1,10 +1,19 @@
-use std::time::Duration;
 use std::fs;
+use std::time::Duration;
+
 
 use egui::{Context, PlatformOutput};
 
-use egui_overlay::egui_render_three_d::ThreeDBackend as DefaultGfxBackend;
+#[cfg(not(target_os = "macos"))]
 use egui_overlay::egui_render_three_d;
+#[cfg(not(target_os = "macos"))]
+use egui_overlay::egui_render_three_d::ThreeDBackend as DefaultGfxBackend;
+
+// Mac is not supported until wgpu dependencies get fixed by several crates with pinned incompatible versions
+// #[cfg(target_os = "macos")]
+// use egui_render_wgpu;
+// #[cfg(target_os = "macos")]
+// use egui_render_wgpu::WgpuBackend as DefaultGfxBackend;
 
 use egui_window_glfw_passthrough::{GlfwBackend, GlfwConfig, glfw::PixelImage};
 
@@ -26,32 +35,34 @@ fn load_pixel_icon() -> PixelImage {
 
 pub fn start<T: EguiOverlay + 'static>(user_data: T) {
     let mut glfw_backend = GlfwBackend::new(GlfwConfig {
-        // this closure will be called before creating a window
         glfw_callback: Box::new(|gtx| {
-            // some defualt hints. it is empty atm, but in future we might add some convenience hints to it.
             (egui_window_glfw_passthrough::GlfwConfig::default().glfw_callback)(gtx);
-            // scale the window size based on monitor scale. as 800x600 looks too small on a 4k screen, compared to a hd screen in absolute pixel sizes.
+            // Can add more glfw window hints here
             // gtx.window_hint(egui_window_glfw_passthrough::glfw::WindowHint::ScaleToMonitor(true));
         }),
-        opengl_window: Some(true), // opengl for non-macos, for faster compilation and less wgpu bloat. also, drivers are better with gl transparency than vk
+        #[cfg(not(target_os = "macos"))]
+        opengl_window: Some(true),
+        #[cfg(target_os = "macos")]
+        opengl_window: Some(false),
 
         transparent_window: Some(true),
         ..Default::default()
     });
-
+    // Disable user resizing
     glfw_backend.window.set_resizable(false);
-    
-    // always on top
+    // Always on top
     glfw_backend.window.set_floating(true);
-    // disable borders/titlebar
+    // Disable borders/titlebar
     glfw_backend.window.set_decorated(false);
 
+    // Set overlay app icon & title
     glfw_backend.window.set_icon_from_pixels(vec![load_pixel_icon()]);
     glfw_backend.window.set_title("Exile Controller");
 
     let latest_size = glfw_backend.window.get_framebuffer_size();
     let latest_size = [latest_size.0 as _, latest_size.1 as _];
 
+    #[cfg(not(target_os = "macos"))]
     let default_gfx_backend = {
         DefaultGfxBackend::new(
             egui_render_three_d::ThreeDConfig {
@@ -61,6 +72,14 @@ pub fn start<T: EguiOverlay + 'static>(user_data: T) {
             latest_size,
         )
     };
+    #[cfg(target_os = "macos")]
+    let default_gfx_backend = DefaultGfxBackend::new(
+        egui_render_wgpu::WgpuConfig {
+            ..Default::default()
+        },
+        Some(Box::new(glfw_backend.window.render_context())),
+        latest_size,
+    );
 
     let overlap_app = OverlayApp {
         user_data,
