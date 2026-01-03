@@ -16,83 +16,10 @@ use egui_overlay::egui_render_three_d::ThreeDBackend as DefaultGfxBackend;
 use egui_extras;
 
 use crate::controller::action_manager::ActionManager;
-use crate::controller::input::{GamepadManager, ControllerType};
+use crate::controller::input::GamepadManager;
 use crate::game_window_tracker::GameWindowTracker;
 use crate::settings::{OverlaySettings, ControllerSettings};
-
-struct ControllerImage {
-    playstation: String,
-    xbox: String,
-}
-
-impl ControllerImage {
-    fn new(playstation: &str, xbox: &str) -> Self {
-        Self {
-            // TODO(Samantha): Consider not unwrappiner here, although panic makes sense if we can't load the image.
-            // playstation: RetainedImage::from_image_bytes(debug_name, &fs::read(playstation).unwrap()).unwrap(),
-            playstation: playstation.to_string(),
-            xbox: xbox.to_string(),
-        }
-    }
-    fn choose_image(&self, controller_type: ControllerType) -> &String {
-        match controller_type {
-            ControllerType::Playstation => &self.playstation,
-            ControllerType::Xbox => &self.xbox,
-        }
-    }
-}
-
-struct OverlayImages {
-    button_d_up: ControllerImage,
-    button_d_down: ControllerImage,
-    button_d_left: ControllerImage,
-    button_d_right: ControllerImage,
-
-    button_face_down: ControllerImage,
-    button_face_right: ControllerImage,
-    button_face_left: ControllerImage,
-    button_face_up: ControllerImage,
-
-    button_bumper_left: ControllerImage,
-    button_bumper_right: ControllerImage,
-    // button_trigger_left: ControllerImage,
-    // button_trigger_right: ControllerImage,
-
-    left_stick: ControllerImage,
-    // right_stick: ControllerImage,
-
-    // button_l3: ControllerImage,
-    button_r3: ControllerImage,
-}
-
-
-impl Default for OverlayImages {
-    fn default() -> Self {
-        Self {
-            button_d_up: ControllerImage::new("file://img/playstation/dpad_up.png", "file://img/xbox/dpad_up.png"),
-            button_d_down: ControllerImage::new("file://img/playstation/dpad_down.png", "file://img/xbox/dpad_down.png"),
-            button_d_left: ControllerImage::new("file://img/playstation/dpad_left.png", "file://img/xbox/dpad_left.png"),
-            button_d_right: ControllerImage::new("file://img/playstation/dpad_right.png", "file://img/xbox/dpad_right.png"),
-
-            button_face_down: ControllerImage::new("file://img/playstation/ps_button_x.png",  "file://img/xbox/xb_button_a.png"),
-            button_face_right: ControllerImage::new("file://img/playstation/ps_button_o.png", "file://img/xbox/xb_button_b.png"),
-            button_face_left: ControllerImage::new("file://img/playstation/ps_button_sq.png", "file://img/xbox/xb_button_x.png"),
-            button_face_up: ControllerImage::new("file://img/playstation/ps_button_tri.png", "file://img/xbox/xb_button_y.png"),
-
-            button_bumper_left: ControllerImage::new("file://img/playstation/ps_lb.png",  "file://img/xbox/xb_lb.png"),
-            button_bumper_right: ControllerImage::new("file://img/playstation/ps_rb.png", "file://img/xbox/xb_rb.png"),
-            // button_trigger_left: ControllerImage::new("file://img/playstation/ps_lt.png", "file://img/xbox/xb_lt.png"),
-            // button_trigger_right: ControllerImage::new("file://img/playstation/ps_rb.png", "file://img/xbox/xb_rb.png"),
-
-            left_stick: ControllerImage::new("file://img/playstation/left_analog.png", "file://img/xbox/left_analog.png"),
-            // right_stick: ControllerImage::new("file://img/playstation/right_analog.png", "file://img/xbox/right_analog.png"),
-
-            // button_l3: ControllerImage::new("file://img/playstation/button_l3.png", "file://img/xbox/button_l3.png"),
-            button_r3: ControllerImage::new("file://img/playstation/button_r3.png", "file://img/xbox/button_r3.png"),
-        }
-    }
-}
-
+use crate::overlay::overlay_images::OverlayImages;
 
 
 struct GameOverlay {
@@ -126,19 +53,19 @@ impl GameOverlay {
         let y_offset = 0.97;
 
         let controller_type = self.gamepad_manager.determine_controller_type();
-        self.place_overlay_image(ctx, &images.button_face_left.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_face_left(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*3.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                        "button_face_left".to_string());
-        self.place_overlay_image(ctx, &images.button_face_down.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_face_down(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*2.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_face_down".to_string());
-        self.place_overlay_image(ctx, &images.button_face_right.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_face_right(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*1.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_face_right".to_string());
-        self.place_overlay_image(ctx, &images.button_face_up.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_face_up(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_face_up".to_string());
@@ -150,23 +77,23 @@ impl GameOverlay {
         let y_offset = 0.97;
 
         let controller_type = self.gamepad_manager.determine_controller_type();
-        self.place_overlay_image(ctx, &images.button_d_left.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_d_left(controller_type),
             Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*4.0) + self.game_window_tracker.window_pos_x(), 
                 y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
            "button_d_left".to_string());
-        self.place_overlay_image(ctx, &images.button_d_down.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_d_down(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*3.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                        "button_d_down".to_string());
-        self.place_overlay_image(ctx, &images.button_d_right.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_d_right(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*2.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_d_right".to_string());
-        self.place_overlay_image(ctx, &images.button_d_up.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_d_up(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*1.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_d_up".to_string());
-        self.place_overlay_image(ctx, &images.button_r3.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_r3(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_r3".to_string());
@@ -178,15 +105,15 @@ impl GameOverlay {
         let y_offset = 0.909;
 
         let controller_type = self.gamepad_manager.determine_controller_type();
-        self.place_overlay_image(ctx, &images.left_stick.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.left_stick(controller_type),
             Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*2.0) + self.game_window_tracker.window_pos_x(), 
                 y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
             "left_stick".to_string());
-        self.place_overlay_image(ctx, &images.button_bumper_left.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_bumper_left(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset-x_offset_offset*1.0) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                        "button_bumper_left".to_string());
-        self.place_overlay_image(ctx, &images.button_bumper_right.choose_image(controller_type),
+        self.place_overlay_image(ctx, &images.button_bumper_right(controller_type),
                         Pos2 { x: self.game_window_tracker.game_window_width() * (x_offset) + self.game_window_tracker.window_pos_x(), 
                             y: self.game_window_tracker.game_window_height() * y_offset + self.game_window_tracker.window_pos_y() },
                         "button_bumper_right".to_string());

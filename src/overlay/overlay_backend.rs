@@ -1,7 +1,6 @@
 use std::fs;
 use std::time::Duration;
 
-
 use egui::{Context, PlatformOutput};
 
 #[cfg(not(target_os = "macos"))]
