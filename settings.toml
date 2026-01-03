@@ -41,12 +41,12 @@ always_show_overlay = false
 windowed_mode = false
 
 [controller]
-walk_circle_radius_px = "110"
+walk_circle_radius_px = "130"
 close_circle_radius_px = "100"
 mid_circle_radius_px = "250"
-far_circle_radius_px = "400"
+far_circle_radius_px = "420"
 character_x_offset_px = "0"
-character_y_offset_px = "100"
+character_y_offset_px = "60"
 dead_zone_percentage = "0.17"
 free_mouse_sensitivity_px = "10"
 controller_type = "Auto" # Must be set to {Forced = "Playstation"}, {Forced = "Xbox"}, "Auto"

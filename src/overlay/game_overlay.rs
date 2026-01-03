@@ -36,6 +36,8 @@ struct GameOverlay {
 }
 
 impl GameOverlay {
+    // TODO: Figure these offsets out dynamically, updating via game_window_tracker, using the screen ratio since that seems to be what scales the game's display UI. 
+    // May also need to chop off the window header in windowed mode and downsize the images for smaller windows.
     fn place_overlay_image(&self, ctx: &Context, image_path: &String, position: Pos2, id_source: String) {
         egui::Area::new(egui::Id::new(id_source.clone()))
                         .movable(false)
