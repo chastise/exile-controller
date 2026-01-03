@@ -5,8 +5,8 @@ use crate::settings::ApplicationSettings;
 pub struct GameWindowTracker {
     // TODO(chastise): This probably should be re-usable in a refactor, one for game-overlay specific things, one for remote overlay
     windowed_mode: bool,
-    window_pos_x: f32,
-    window_pos_y: f32,
+    game_window_pos_x: f32,
+    game_window_pos_y: f32,
     game_window_width: f32,
     game_window_height: f32,
 }
@@ -16,15 +16,15 @@ impl GameWindowTracker {
     pub fn new(application_settings: ApplicationSettings) -> GameWindowTracker {
         GameWindowTracker { 
             windowed_mode: application_settings.overlay_settings().windowed_mode(),
-            window_pos_x: 0.0,
-            window_pos_y: 0.0,
+            game_window_pos_x: 0.0,
+            game_window_pos_y: 0.0,
             game_window_width: application_settings.overlay_settings().screen_width(),
             game_window_height: application_settings.overlay_settings().screen_height(),
         }
     }
-    pub fn windowed_mode(&self) -> bool {self.windowed_mode} // TODO: Remove this when we allow in-gui settings editing
-    pub fn window_pos_x(&self) -> f32 {self.window_pos_x}
-    pub fn window_pos_y(&self) -> f32 {self.window_pos_y}
+    pub fn windowed_mode(&self) -> bool {self.windowed_mode}
+    pub fn game_window_pos_x(&self) -> f32 {self.game_window_pos_x}
+    pub fn game_window_pos_y(&self) -> f32 {self.game_window_pos_y}
     pub fn game_window_width(&self) -> f32 {self.game_window_width}
     pub fn game_window_height(&self) -> f32 {self.game_window_height}
 
@@ -39,7 +39,7 @@ impl GameWindowTracker {
     }
 
     pub fn update_window_tracker(&mut self) {
-        (self.window_pos_x, self.window_pos_y) = self.window_position();
+        (self.game_window_pos_x, self.game_window_pos_y) = self.window_position();
         (self.game_window_width, self.game_window_height) = self.window_size();
     }
 

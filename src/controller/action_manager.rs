@@ -215,10 +215,10 @@ impl ActionManager {
         #[cfg(target_os = "windows")]
         let (title_bar_height, window_shadow_amount) = (32.0, 10.0); // magic numbers, may only be correct on windows
 
-        let min_x_pos = (self.game_window_tracker.window_pos_x() + window_shadow_amount) as f64;
-        let min_y_pos = (self.game_window_tracker.window_pos_y() + title_bar_height) as f64;
-        let max_x_pos = (self.game_window_tracker.window_pos_x() + self.game_window_tracker.game_window_width() - window_shadow_amount) as f64;
-        let max_y_pos = (self.game_window_tracker.window_pos_y() + self.game_window_tracker.game_window_height()- window_shadow_amount) as f64;
+        let min_x_pos = (self.game_window_tracker.game_window_pos_x() + window_shadow_amount) as f64;
+        let min_y_pos = (self.game_window_tracker.game_window_pos_y() + title_bar_height) as f64;
+        let max_x_pos = (self.game_window_tracker.game_window_pos_x() + self.game_window_tracker.game_window_width() - window_shadow_amount) as f64;
+        let max_y_pos = (self.game_window_tracker.game_window_pos_y() + self.game_window_tracker.game_window_height()- window_shadow_amount) as f64;
         if new_x < min_x_pos {
             return_x = min_x_pos;
         } else if new_x > max_x_pos {
@@ -236,8 +236,8 @@ impl ActionManager {
     fn get_radial_location(&self, circle_radius: f32, angle: f32) -> (f32, f32) {
         let screen_adjustment_x = angle.cos() * circle_radius;
         let screen_adjustment_y = angle.sin() * circle_radius;
-        let new_x = self.game_window_tracker.game_window_width()/2.0 + screen_adjustment_x + self.settings.controller_settings().character_x_offset_px() + self.game_window_tracker.window_pos_x();
-        let new_y = self.game_window_tracker.game_window_height()/2.0 - screen_adjustment_y - self.settings.controller_settings().character_y_offset_px() + self.game_window_tracker.window_pos_y();
+        let new_x = self.game_window_tracker.game_window_width()/2.0 + screen_adjustment_x + self.settings.controller_settings().character_x_offset_px() + self.game_window_tracker.game_window_pos_x();
+        let new_y = self.game_window_tracker.game_window_height()/2.0 - screen_adjustment_y - self.settings.controller_settings().character_y_offset_px() + self.game_window_tracker.game_window_pos_y();
         (new_x, new_y)
     }
 
