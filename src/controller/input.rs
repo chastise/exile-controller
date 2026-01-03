@@ -142,10 +142,10 @@ impl ControllerState {
         buttons.insert("dpad_right".to_string(), &mut self.dpad_right);
         buttons.insert("start".to_string(), &mut self.start);
         buttons.insert("back".to_string(), &mut self.back);
-        buttons.insert("a".to_string(), &mut self.a);
-        buttons.insert("b".to_string(), &mut self.b);
-        buttons.insert("x".to_string(), &mut self.x);
-        buttons.insert("y".to_string(), &mut self.y);
+        buttons.insert("face_up".to_string(), &mut self.y);
+        buttons.insert("face_down".to_string(), &mut self.a);
+        buttons.insert("face_right".to_string(), &mut self.b);
+        buttons.insert("face_left".to_string(), &mut self.x);
         buttons.insert("bumper_left".to_string(), &mut self.bumper_left);
         buttons.insert("trigger_left".to_string(), &mut self.trigger_left.button);
         buttons.insert("bumper_right".to_string(), &mut self.bumper_right);

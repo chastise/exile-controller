@@ -78,7 +78,7 @@ impl ApplicationSettings {
             panic!("Windowed Mode is unsupported when coupled with Always Show Overlay!");
         }
 
-        let valid_ability_buttons: HashSet<String> = HashSet::from(["a", "b", "x", "y", "bumper_left", "bumper_right", "trigger_left", "trigger_right"].map(|x| x.to_owned()));
+        let valid_ability_buttons: HashSet<String> = HashSet::from(["face_up", "face_down", "face_left", "face_right", "bumper_left", "bumper_right", "trigger_left", "trigger_right"].map(|x| x.to_owned()));
         let valid_ability_ranges: HashSet<String>= HashSet::from(["close", "mid", "far"].map(|x| x.to_owned()));
         let buttons: Vec<String> = self.action_distances.keys().cloned().collect();
         let distances: Vec<String> = self.action_distances.values().cloned().collect();
@@ -100,16 +100,16 @@ impl ApplicationSettings {
         // Ensure buttons are valid!
         let valid_buttons_set = HashSet::from(
             [
-                "x",
-                "y",
-                "a",
-                "b",
+                "face_up",
+                "face_down",
+                "face_left",
+                "face_right",
                 "start",
                 "back",
+                "dpad_up",
                 "dpad_down",
                 "dpad_left",
                 "dpad_right",
-                "dpad_up",
                 "left_analog",
                 "right_analog",
                 "bumper_left",
@@ -125,10 +125,10 @@ impl ApplicationSettings {
         // Ensure aimables
         let valid_aimable_buttons_set = HashSet::from(
             [
-                "x",
-                "y",
-                "a",
-                "b",
+                "face_up",
+                "face_down",
+                "face_left",
+                "face_right",
                 "bumper_left",
                 "bumper_right",
                 "trigger_left",
@@ -142,10 +142,10 @@ impl ApplicationSettings {
         }
 
         // Setup ability_mapping_settings
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("a").unwrap().clone(), "a".to_owned());
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("b").unwrap().clone(), "b".to_owned());
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("x").unwrap().clone(), "x".to_owned());
-        self.ability_mapping_settings.insert(self.button_mapping_settings.get("y").unwrap().clone(), "y".to_owned());
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get("face_up").unwrap().clone(), "face_up".to_owned());
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get("face_down").unwrap().clone(), "face_down".to_owned());
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get("face_right").unwrap().clone(), "face_right".to_owned());
+        self.ability_mapping_settings.insert(self.button_mapping_settings.get("face_left").unwrap().clone(), "face_left".to_owned());
         self.ability_mapping_settings.insert(self.button_mapping_settings.get("bumper_left").unwrap().clone(), "bumper_left".to_owned());
         self.ability_mapping_settings.insert(self.button_mapping_settings.get("bumper_right").unwrap().clone(), "bumper_right".to_owned());
         self.ability_mapping_settings.insert(self.button_mapping_settings.get("trigger_left").unwrap().clone(), "trigger_left".to_owned());
