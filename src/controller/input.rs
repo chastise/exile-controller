@@ -197,12 +197,6 @@ pub fn load_gamepad_manager(analog_deadzone: f32) -> GamepadManager {
         controller_state: ControllerState::default(),
     };
 
-    // Gilrs will not initially throw a connected event if a controller is connected from the start
-    let connected_controllers = gamepad_manager.get_connected_controllers();
-    if !connected_controllers.is_empty() {
-        gamepad_manager.connect_to_controller(connected_controllers, 0);
-    }
-
     // initialize triggers and joy stick deadzones
     let gamepad_triggers_threshold = 0.8_f32;
     gamepad_manager.controller_state.trigger_left.set_trigger_threshold(gamepad_triggers_threshold);
@@ -260,11 +254,7 @@ impl GamepadManager {
                 // gilrs doesn't register new gamepads in gilrs_context.gamepads() until EventType::Connected events have been pulled off the events queue.
                 None => {
                     match event {
-                        EventType::Connected => {
-                            // TODO(Samantha): Is this really what we want to do here? Reconsider when we allow changing controllers.
-                            let connected_controllers = self.get_connected_controllers();
-                            self.connect_to_controller(connected_controllers, 0)
-                        },
+                        EventType::Connected => (),
                         _ => (),
                     }
                 },
@@ -272,7 +262,7 @@ impl GamepadManager {
         }
     }
 
-    pub fn get_connected_controllers(&mut self) -> Vec<(GamepadId, String)> { 
+    pub fn get_connected_controllers(&self) -> Vec<(GamepadId, String)> {
         let mut connected_controllers = Vec::<(GamepadId, String)>::new();
         for (gamepad_id, gamepad) in self.gilrs_context.gamepads() {
             connected_controllers.push((gamepad_id, gamepad.name().to_string()));
@@ -281,24 +271,19 @@ impl GamepadManager {
     }
 
     pub fn is_controller_connected(&self) -> bool {
-        match self.gamepad_id {
-            Some(_c) => true,
-            None => false,
-        }
+        self.get_connected_controllers().len() > 0
     }
 
     pub fn connect_to_controller(&mut self, connected_controllers: Vec<(GamepadId, String)>, index: usize) { 
         let gamepad_id = connected_controllers[index].0;
         self.gamepad_id = Some(gamepad_id);
         self.controller_type = Some(self.infer_controller_type());
-        println!("Controller connected!");
     }
 
     pub fn get_connected_controller_label(&self) -> String {
-        if self.is_controller_connected() {
-            self.gilrs_context.gamepad(self.gamepad_id.unwrap()).os_name().to_owned()
-        } else {
-            "none".to_owned()
+        match self.gamepad_id {
+            Some(id) => self.gilrs_context.gamepad(id).os_name().to_owned(),
+            None => "none".to_owned(),
         }
     }
 
