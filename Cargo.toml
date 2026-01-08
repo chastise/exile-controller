@@ -7,8 +7,8 @@ license = "MIT"
 [dependencies]
 config = {version = "0.15.19"}
 serde = {version = "1.0.228", features = ["derive"]}
-gilrs = {version ="0.11.0", default-features = false, features = ["xinput"]}
-rdev = "0.5.3"
+gilrs = {version ="0.11.0", default-features = false, features = ["serde-serialize", "xinput"]}
+rdev = {version = "0.5.3", features = ["serialize"]}
 active-win-pos-rs = "0.9.1"
 native-dialog = "0.9.4"
 
