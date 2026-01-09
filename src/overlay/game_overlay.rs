@@ -33,6 +33,7 @@ struct GameOverlay {
     remote_open: bool,
     remote_pos: Pos2,
     game_input_started: bool,
+    selected_controller_dropdown_index: usize,
 }
 
 impl GameOverlay {
@@ -176,16 +177,16 @@ impl GameOverlay {
                                         egui::Grid::new("Remote Grid ID").min_col_width(220.0).show(ui, |ui| {
                                             let mut can_overlay_start = true;
                                             if self.gamepad_manager.is_controller_connected() {
-                                                let controller_label =  self.gamepad_manager.get_connected_controller_label();
-                                                ui.label(String::from("Controller connected: ") + controller_label.as_str());
-                                            //     let mut selected = 0 as usize;
-                                            //     egui::ComboBox::from_label("Select Connected Controller:")
-                                            //     .selected_text(format!("{:?}", selected))
-                                            //     .show_index(ui, &mut selected, connected_controllers.len(), |i| connected_controllers[i].1.to_owned());
-                                            //     self.gamepad_manager.select_connected_controller(connected_controllers.get(selected).unwrap().0);
-                                            // } else {
-                                            //     let mut selected = 0 as usize;
-                                            //     egui::ComboBox::from_label("Connect a controller").selected_text("None connected").show_index(ui, &mut selected, 1, |_i| "".to_string());
+                                                // let controller_label =  self.gamepad_manager.get_connected_controller_label();
+                                                // ui.label(String::from("Controller connected: ") + controller_label.as_str());
+                                                let connected_controllers = self.gamepad_manager.get_connected_controllers();
+                                                ui.label(egui::RichText::new("Select from connected controllers:").size(14.0));
+                                                ui.end_row();
+                                                egui::ComboBox::from_id_salt("controller-select-dropdown")
+                                                                .selected_text(format!("{:?}", &mut self.selected_controller_dropdown_index))
+                                                                .show_index(ui, &mut self.selected_controller_dropdown_index, connected_controllers.len(), |i| connected_controllers[i].1.to_owned());
+                                                self.gamepad_manager.connect_to_controller(connected_controllers, self.selected_controller_dropdown_index);
+                                                ui.end_row();
                                             } else {
                                                 ui.label(String::from("No controller connected."));
                                                 can_overlay_start = false;
@@ -315,6 +316,7 @@ pub fn start_overlay(overlay_settings: OverlaySettings,
         remote_open: true,
         remote_pos: Pos2 { x: screen_width / 2.0 , y: screen_height / 16.0 },
         game_input_started: false,
+        selected_controller_dropdown_index: 0,
     };
     
     overlay_backend::start(game_overlay);
