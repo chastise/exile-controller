@@ -1,4 +1,3 @@
-use std::fs;
 use std::time::Duration;
 
 use egui::{Context, PlatformOutput};
@@ -17,7 +16,7 @@ use egui_overlay::egui_render_three_d::ThreeDBackend as DefaultGfxBackend;
 use egui_window_glfw_passthrough::{GlfwBackend, GlfwConfig, glfw::PixelImage};
 
 fn load_pixel_icon() -> PixelImage {
-    let icon_image: &[u8] = &fs::read("img/icon.ico").unwrap();
+    let icon_image: &[u8] = include_bytes!("../../img/icon.ico");
 
     let img = image::load_from_memory(icon_image).unwrap();
     let img_width = img.width();
