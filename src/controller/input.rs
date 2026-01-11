@@ -133,27 +133,24 @@ pub struct ControllerState {
 }
 
 impl ControllerState {
-    pub fn get_all_buttons(&mut self) -> HashMap<String, &mut ControllerButton> {
-        let mut buttons = HashMap::new();
-
-        buttons.insert("dpad_up".to_string(), &mut self.dpad_up);
-        buttons.insert("dpad_down".to_string(), &mut self.dpad_down);
-        buttons.insert("dpad_left".to_string(), &mut self.dpad_left);
-        buttons.insert("dpad_right".to_string(), &mut self.dpad_right);
-        buttons.insert("start".to_string(), &mut self.start);
-        buttons.insert("back".to_string(), &mut self.back);
-        buttons.insert("face_up".to_string(), &mut self.y);
-        buttons.insert("face_down".to_string(), &mut self.a);
-        buttons.insert("face_right".to_string(), &mut self.b);
-        buttons.insert("face_left".to_string(), &mut self.x);
-        buttons.insert("bumper_left".to_string(), &mut self.bumper_left);
-        buttons.insert("trigger_left".to_string(), &mut self.trigger_left.button);
-        buttons.insert("bumper_right".to_string(), &mut self.bumper_right);
-        buttons.insert("trigger_right".to_string(), &mut self.trigger_right.button);
-        buttons.insert("left_analog".to_string(), &mut self.left_analog.button);
-        buttons.insert("right_analog".to_string(), &mut self.right_analog.button);
-
-        buttons
+    pub fn get_all_buttons(&mut self) -> HashMap<gilrs::Button, &mut ControllerButton> {
+        HashMap::from([
+            (gilrs::Button::DPadUp, &mut self.dpad_up),
+            (gilrs::Button::DPadDown, &mut self.dpad_down),
+            (gilrs::Button::DPadLeft, &mut self.dpad_left),
+            (gilrs::Button::DPadRight, &mut self.dpad_right),
+            (gilrs::Button::Start, &mut self.start),
+            (gilrs::Button::Select, &mut self.back),
+            (gilrs::Button::North, &mut self.y),
+            (gilrs::Button::South, &mut self.a),
+            (gilrs::Button::East, &mut self.b),
+            (gilrs::Button::West, &mut self.x),
+            (gilrs::Button::LeftTrigger, &mut self.bumper_left),
+            (gilrs::Button::LeftTrigger2, &mut self.trigger_left.button),
+            (gilrs::Button::RightTrigger, &mut self.bumper_right),
+            (gilrs::Button::RightTrigger2, &mut self.trigger_right.button),
+            (gilrs::Button::LeftThumb, &mut self.left_analog.button),
+            (gilrs::Button::RightThumb, &mut self.right_analog.button),])
     }
 
     pub fn get_left_analog_stick(&self) -> AnalogStick {
