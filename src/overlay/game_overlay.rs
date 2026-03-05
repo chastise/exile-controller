@@ -1,17 +1,7 @@
 use std::process::exit;
 
-use egui;
+use egui::{self, IconData, Rgba, ViewportCommand};
 use egui::{Area, Color32, Context, epaint, Pos2, Rect, Vec2};
-
-// use egui_overlay::EguiOverlay;
-use crate::overlay::overlay_backend::{self, EguiOverlay};
-
-#[cfg(not(target_os = "macos"))]
-use egui_overlay::egui_render_three_d::ThreeDBackend as DefaultGfxBackend;
-
-// Mac is not supported until wgpu dependencies get fixed by several crates with pinned incompatible versions
-// #[cfg(target_os = "macos")]
-// use egui_render_wgpu::WgpuBackend as DefaultGfxBackend;
 
 use egui_extras;
 
@@ -153,7 +143,7 @@ impl GameOverlay {
 
     
         let mut gui_visuals = ctx.style().visuals.clone();
-        gui_visuals.window_shadow = epaint::Shadow{offset: Vec2 { x: (0.0), y: (0.0) }, blur: 0.0, spread: 0.0, color: Color32::DARK_GRAY};
+        gui_visuals.window_shadow = epaint::Shadow{offset: [0, 0], blur: 0, spread: 0, color: Color32::DARK_GRAY};
         gui_visuals.widgets.noninteractive.bg_stroke = epaint::Stroke {width: 1.5, color: Color32::from_rgb(138, 90, 62)};
         gui_visuals.widgets.inactive.bg_stroke = epaint::Stroke {width: 1.0, color: Color32::from_rgb(100,100,100)};
         gui_visuals.widgets.noninteractive.fg_stroke = epaint::Stroke {width: 1.0, color: Color32::from_rgb(215,210,210)};
@@ -251,21 +241,13 @@ impl GameOverlay {
     }
 }
 
-impl EguiOverlay for GameOverlay {
-    fn gui_run(
-        &mut self,
-        egui_context: &Context,
-        _default_gfx_backend_: &mut DefaultGfxBackend,
-        glfw_backend: &mut egui_overlay::egui_window_glfw_passthrough::GlfwBackend,
-    ) {
-        egui_extras::install_image_loaders(egui_context);
+impl eframe::App for GameOverlay {
+    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
+        Rgba::TRANSPARENT.to_array()
+    }
 
-        // Sets a GLFW window to the configured size on screen. Game-rect overlay bounds are set later.
-        glfw_backend.window.set_size(self.overlay_settings.screen_width() as i32, self.overlay_settings.screen_height() as i32);
-        glfw_backend.window.set_pos(0, 0);
-
+    fn update(&mut self, egui_context: &egui::Context, _frame: &mut eframe::Frame) {
         self.draw_remote(egui_context);
-
         // Make sure we process gamepad events no matter what, lest we lose disconnections and connections.
         self.gamepad_manager.process_gamepad_events();
         if self.game_input_started {
@@ -289,12 +271,11 @@ impl EguiOverlay for GameOverlay {
             }
         }
 
-        if egui_context.wants_pointer_input() || egui_context.wants_keyboard_input() {
-            glfw_backend.window.set_mouse_passthrough(false);
+        if egui_context.wants_pointer_input() || egui_context.wants_keyboard_input ()  || egui_context.is_pointer_over_area() {
+            egui_context.send_viewport_cmd(ViewportCommand::MousePassthrough(false));
         } else {
-            glfw_backend.window.set_mouse_passthrough(true);
+            egui_context.send_viewport_cmd(ViewportCommand::MousePassthrough(true));
         }
-        egui_context.request_repaint();
     }
 }
 
@@ -319,5 +300,30 @@ pub fn start_overlay(overlay_settings: OverlaySettings,
         selected_controller_dropdown_index: 0,
     };
     
-    overlay_backend::start(game_overlay);
+    let native_options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([screen_width, screen_height])
+            .with_decorations(false)
+            .with_transparent(true)
+            .with_has_shadow(false)
+            .with_active(true)
+            .with_always_on_top()
+            .with_icon({
+                let icon_bytes =  include_bytes!("../../img/icon.ico");
+                let image = image::load_from_memory(icon_bytes)
+                    .expect("failed to find img/icon.ico!")
+                    .into_rgba8();
+                let (width, height) = image.dimensions();
+                let rgba = image.into_raw();
+                IconData{rgba, width, height}
+            }),
+        ..Default::default()
+    };
+    let _result = eframe::run_native(
+        "Exile Controller",
+        native_options,
+        Box::new(|cc| {
+            egui_extras::install_image_loaders(&cc.egui_ctx);
+            Ok(Box::new(game_overlay))
+        }));
 }

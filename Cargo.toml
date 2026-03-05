@@ -13,11 +13,16 @@ active-win-pos-rs = "0.9.1"
 native-dialog = "0.9.4"
 
 # egui
-egui = "0.29"
-egui_extras = {version = "0.29", features = ["all_loaders"]}
+egui = "0.33"
+egui_extras = {version = "0.33", features = ["all_loaders"]}
+eframe = { version = "0.33.0", default-features = false, features = [
+    "default_fonts", # Embed the default egui fonts.
+    "wgpu",
+    "wayland",       # To support Linux (and CI)
+    "x11",           # To support older Linux distributions (restores one of the default features)
+] }
+wgpu = { version = "27.0.1", default-features = true }
 image = { version = "0.25", features = ["png"] }
-egui_overlay = { version = "0.9.0", features = ['three_d']}
-egui_window_glfw_passthrough = "0.9.0"
 
 
 [target.'cfg(windows)'.build-dependencies]
