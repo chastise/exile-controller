@@ -18,8 +18,9 @@ egui_extras = {version = "0.33", features = ["all_loaders"]}
 eframe = { version = "0.33.0", default-features = false, features = [
     "default_fonts", # Embed the default egui fonts.
     "wgpu",
-    "wayland",       # To support Linux (and CI)
-    "x11",           # To support older Linux distributions (restores one of the default features)
+    # Wayland is disabled until a window can be reliably placed/sized. =(
+    # "wayland",
+    "x11",
 ] }
 wgpu = { version = "27.0.1", default-features = true }
 image = { version = "0.25", features = ["png"] }
