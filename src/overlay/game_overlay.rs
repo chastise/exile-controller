@@ -2,7 +2,7 @@ use std::process::exit;
 use std::time::Duration;
 
 
-use egui::{self, IconData, Rgba, ViewportCommand};
+use egui::{self, IconData, Rgba, Sense, ViewportCommand};
 use egui::{Area, Color32, Context, epaint, Pos2, Vec2};
 
 use egui_extras;
@@ -26,7 +26,6 @@ struct GameOverlay {
     remote_open: bool,
     game_input_started: bool,
     selected_controller_dropdown_index: usize,
-    resize_remote_viewport: bool
 }
 
 impl GameOverlay {
@@ -132,7 +131,6 @@ impl GameOverlay {
     }
 
     fn draw_remote(&mut self, ctx: &Context) {
-        let resize_this_frame = self.resize_remote_viewport;
         let mut gui_style = (*ctx.style()).clone();
 
         gui_style.text_styles = [
@@ -144,8 +142,8 @@ impl GameOverlay {
           ].into();
         ctx.set_style(gui_style);
 
-    
-        let mut gui_visuals = ctx.style().visuals.clone();
+        // Force dark mode to work around OS differences.
+        let mut gui_visuals = egui::Visuals::dark();
         gui_visuals.window_shadow = epaint::Shadow{offset: [0, 0], blur: 0, spread: 0, color: Color32::DARK_GRAY};
         gui_visuals.widgets.noninteractive.bg_stroke = epaint::Stroke {width: 1.5, color: Color32::from_rgb(138, 90, 62)};
         gui_visuals.widgets.inactive.bg_stroke = epaint::Stroke {width: 1.0, color: Color32::from_rgb(100,100,100)};
@@ -159,50 +157,42 @@ impl GameOverlay {
             let configured_controller_type = self.controller_settings.controller_type();
             self.gamepad_manager.set_controller_type_detection(configured_controller_type);
         }
-
         let response = egui::Window::new(egui::RichText::new("Exile Controller").color(Color32::from_rgb(227, 117, 0)).strong())
             .resizable(false)
             .collapsible(false)
-            .title_bar(self.remote_open)
+            .drag_to_scroll(false)
+            .title_bar(false)
+            .movable(false)
             .show(ctx, |ui| {
+                // This must be placed first or it will override interacting with buttons.
+                let drag_rect = ui.max_rect();
+                let drag_response = ui.interact(
+                    drag_rect,
+                    egui::Id::new("remote_drag_area"),
+                    Sense::click_and_drag(),
+                );
+
                 egui::Grid::new("Remote Grid ID").min_col_width(220.0).show(ui, |ui| {
-                    // This must be placed first or it will override interacting with buttons.
-                    let app_rect = ui.max_rect();
-
-                    let title_bar_height = 32.0;
-                    let title_bar_rect = {
-                        let mut rect = app_rect;
-                        rect.max.y = rect.min.y + title_bar_height;
-                        rect
-                    };
-                    let title_bar_response = ui.interact(
-                        title_bar_rect,
-                        egui::Id::new("title_bar"),
-                        egui::Sense::click_and_drag(),
-                    );
-
                     if self.remote_open {
                         let mut can_overlay_start = true;
                         if self.gamepad_manager.is_controller_connected() {
-                            // let controller_label =  self.gamepad_manager.get_connected_controller_label();
-                            // ui.label(String::from("Controller connected: ") + controller_label.as_str());
                             let connected_controllers = self.gamepad_manager.get_connected_controllers();
-                            ui.label(egui::RichText::new("Select from connected controllers:").size(14.0));
+                            ui.add(egui::Label::new(egui::RichText::new("Select from connected controllers:").size(14.0)).selectable(false));
                             ui.end_row();
+                            // FIXME: These should be set to a max length in both the closed and open combobox display.
                             egui::ComboBox::from_id_salt("controller-select-dropdown")
                                 .selected_text(format!("{:?}", &mut self.selected_controller_dropdown_index))
                                 .show_index(ui, &mut self.selected_controller_dropdown_index, connected_controllers.len(), |i| connected_controllers[i].1.to_owned());
                             self.gamepad_manager.connect_to_controller(connected_controllers, self.selected_controller_dropdown_index);
                             ui.end_row();
                         } else {
-                            ui.label(String::from("No controller connected."));
+                            ui.add(egui::Label::new("No controller connected.").selectable(false));
                             can_overlay_start = false;
                         }
                         ui.end_row();
                         ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
                             let start_button = ui.add_enabled(can_overlay_start, egui::Button::new("Start Controller Input"));
                             if start_button.clicked() {
-                                self.resize_remote_viewport = true;
                                 self.remote_open = false;
                                 self.game_input_started = true;
                             }
@@ -218,37 +208,65 @@ impl GameOverlay {
                                                          .size(14.0)
                             ).on_hover_text("Pause Controller Input");
                             if pause_button.clicked() {
-                                self.resize_remote_viewport = true;
                                 self.remote_open = true;
                                 self.game_input_started = false;
                             }
                         });
                     }
-
-                    // TODO(Samantha): Dragging is a mess right now (at least on linux/wayland).
-                    // Notably, you cannot drag by the titlebar of the window???
-                    if title_bar_response.drag_started_by(egui::PointerButton::Primary) {
+                    // TODO(Samantha): Investigate using a ui builder here and passing the drag send event to the viewport.
+                    if drag_response.drag_started_by(egui::PointerButton::Primary) {
                         ui.ctx().send_viewport_cmd(ViewportCommand::StartDrag);
                     }
                 })
             }).unwrap().response;
-        if resize_this_frame {
-            self.resize_remote_viewport = false;
-            ctx.send_viewport_cmd(ViewportCommand::InnerSize(response.rect.size()));
-        }
+        ctx.send_viewport_cmd(ViewportCommand::InnerSize(response.rect.size()));
     }
-
-    // fn draw_controller_connected_label(&mut self, ctx: &Context, is_connected controller_id: String) {
-    //     let label = egui::widgets::Label::new(controller_id);
-    //     label.show()
-
-    // }
 
     fn handle_controller_input_loop (&mut self, ctx: &Context) {
         self.game_action_handler.process_input_buttons(self.gamepad_manager.controller_state.get_all_buttons());
         self.game_action_handler.process_input_analogs(self.gamepad_manager.controller_state.get_left_analog_stick(), 
                                             self.gamepad_manager.controller_state.get_right_analog_stick());
         self.game_action_handler.handle_character_actions(ctx);
+    }
+
+    fn draw_overlay_viewport(&mut self, egui_context: &egui::Context) {
+        if self.overlay_settings.windowed_mode() && self.game_window_tracker.is_poe_active() {
+            self.game_action_handler.update_window_tracker();
+        }
+        let window_position = Pos2{x: self.game_window_tracker.game_window_pos_x(), y: self.game_window_tracker.game_window_pos_y()};
+        let inner_size = [self.game_window_tracker.game_window_width(), self.game_window_tracker.game_window_height()];
+        egui_context.show_viewport_immediate(
+            egui::ViewportId::from_hash_of("Overlay Images"),
+            egui::ViewportBuilder::default()
+                .with_decorations(false)
+                .with_position(window_position)
+                .with_has_shadow(false)
+                .with_transparent(true)
+                .with_mouse_passthrough(true)
+                .with_always_on_top()
+                .with_taskbar(false)
+                .with_inner_size(inner_size),
+            |inner_ctx, _class|{
+                inner_ctx.send_viewport_cmd(ViewportCommand::OuterPosition(window_position));
+                if self.overlay_settings.windowed_mode() && self.game_window_tracker.is_poe_active() {
+                    self.game_window_tracker.update_window_tracker();
+                }
+                if self.overlay_settings.show_buttons() && (self.overlay_settings.always_show_overlay() || self.game_window_tracker.is_poe_active()) {
+                    self.place_flask_overlay_images(inner_ctx, &self.overlay_images);
+                    self.place_face_overlay_images(inner_ctx, &self.overlay_images);
+                    self.place_mouse_button_overlay_images(inner_ctx, &self.overlay_images);
+                }
+
+                if self.overlay_settings.show_crosshair() && (self.overlay_settings.always_show_overlay() || self.game_window_tracker.is_poe_active()) {
+                    self.paint_crosshair(inner_ctx);
+                }
+
+                self.handle_controller_input_loop(egui_context);
+                if !self.gamepad_manager.is_controller_connected() {
+                    self.game_input_started = false;
+                    self.remote_open = true;
+                }
+            });
     }
 }
 
@@ -258,49 +276,14 @@ impl eframe::App for GameOverlay {
     }
 
     fn update(&mut self, egui_context: &egui::Context, _frame: &mut eframe::Frame) {
-        self.draw_remote(egui_context);
         // Make sure we process gamepad events no matter what, lest we lose disconnections and connections.
         self.gamepad_manager.process_gamepad_events();
+
+        self.draw_remote(egui_context);
         if self.game_input_started {
-            if self.overlay_settings.windowed_mode() && self.game_window_tracker.is_poe_active() {
-                self.game_action_handler.update_window_tracker();
-            }
-            let window_position = Pos2{x: self.game_window_tracker.game_window_pos_x(), y: self.game_window_tracker.game_window_pos_y()};
-            let inner_size = [self.game_window_tracker.game_window_width(), self.game_window_tracker.game_window_height()];
-
-            egui_context.show_viewport_immediate(
-                egui::ViewportId::from_hash_of("Overlay Images"),
-                egui::ViewportBuilder::default()
-                    .with_decorations(false)
-                    .with_position(window_position)
-                    .with_has_shadow(false)
-                    .with_transparent(true)
-                    .with_mouse_passthrough(true)
-                    .with_always_on_top()
-                    .with_taskbar(false)
-                    .with_inner_size(inner_size),
-                |inner_ctx, _class|{
-                    inner_ctx.send_viewport_cmd(ViewportCommand::OuterPosition(window_position));
-                    if self.overlay_settings.windowed_mode() && self.game_window_tracker.is_poe_active() {
-                        self.game_window_tracker.update_window_tracker();
-                    }
-                    if self.overlay_settings.show_buttons() && (self.overlay_settings.always_show_overlay() || self.game_window_tracker.is_poe_active()) {
-                        self.place_flask_overlay_images(inner_ctx, &self.overlay_images);
-                        self.place_face_overlay_images(inner_ctx, &self.overlay_images);
-                        self.place_mouse_button_overlay_images(inner_ctx, &self.overlay_images);
-                    }
-
-                    if self.overlay_settings.show_crosshair() && (self.overlay_settings.always_show_overlay() || self.game_window_tracker.is_poe_active()) {
-                        self.paint_crosshair(inner_ctx);
-                    }
-
-                    self.handle_controller_input_loop(egui_context);
-                    if !self.gamepad_manager.is_controller_connected() {
-                        self.game_input_started = false;
-                        self.remote_open = true;
-                    }
-                });
+            self.draw_overlay_viewport(&egui_context);
         }
+
         // FIXME(Samantha): This is necessary so that we keep processing gamepad events at the moment.
         // Move gamepad events/processing to a different thread?
         egui_context.request_repaint_after(REPAINT_AFTER_IDLE_TIME);
@@ -324,7 +307,6 @@ pub fn start_overlay(overlay_settings: OverlaySettings,
         remote_open: true,
         game_input_started: false,
         selected_controller_dropdown_index: 0,
-        resize_remote_viewport: true,
     };
     
     let native_options = eframe::NativeOptions {
@@ -336,7 +318,7 @@ pub fn start_overlay(overlay_settings: OverlaySettings,
             .with_has_shadow(false)
             .with_active(true)
             .with_always_on_top()
-            .with_taskbar(false)
+            .with_taskbar(true)
             .with_icon({
                 let icon_bytes =  include_bytes!("../../img/icon.ico");
                 let image = image::load_from_memory(icon_bytes)
@@ -348,11 +330,11 @@ pub fn start_overlay(overlay_settings: OverlaySettings,
             }),
         ..Default::default()
     };
-    let _result = eframe::run_native(
+    eframe::run_native(
         "Exile Controller",
         native_options,
         Box::new(|cc| {
             egui_extras::install_image_loaders(&cc.egui_ctx);
             Ok(Box::new(game_overlay))
-        }));
+        })).expect("Failed initialize eframe app!");
 }
