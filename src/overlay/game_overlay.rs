@@ -230,8 +230,10 @@ impl GameOverlay {
     }
 
     fn draw_overlay_viewport(&mut self, egui_context: &egui::Context) {
+        // println!("{}", egui_context.native_pixels_per_point().unwrap());
         if self.overlay_settings.windowed_mode() && self.game_window_tracker.is_poe_active() {
-            self.game_action_handler.update_window_tracker();
+            let overlay_window_zoom_multiplier = 1.0 / egui_context.native_pixels_per_point().unwrap();
+            self.game_window_tracker.update_window_tracker(overlay_window_zoom_multiplier);
         }
         let window_position = Pos2{x: self.game_window_tracker.game_window_pos_x(), y: self.game_window_tracker.game_window_pos_y()};
         let inner_size = [self.game_window_tracker.game_window_width(), self.game_window_tracker.game_window_height()];
@@ -245,12 +247,11 @@ impl GameOverlay {
                 .with_mouse_passthrough(true)
                 .with_always_on_top()
                 .with_taskbar(false)
-                .with_inner_size(inner_size),
+                .with_inner_size(inner_size)
+                // .with_fullscreen(true)
+                .with_resizable(false),
             |inner_ctx, _class|{
                 inner_ctx.send_viewport_cmd(ViewportCommand::OuterPosition(window_position));
-                if self.overlay_settings.windowed_mode() && self.game_window_tracker.is_poe_active() {
-                    self.game_window_tracker.update_window_tracker();
-                }
                 if self.overlay_settings.show_buttons() && (self.overlay_settings.always_show_overlay() || self.game_window_tracker.is_poe_active()) {
                     self.place_flask_overlay_images(inner_ctx, &self.overlay_images);
                     self.place_face_overlay_images(inner_ctx, &self.overlay_images);
@@ -275,7 +276,7 @@ impl eframe::App for GameOverlay {
         Rgba::TRANSPARENT.to_array()
     }
 
-    fn update(&mut self, egui_context: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, egui_context: &egui::Context, _frame: &mut eframe::Frame) { 
         // Make sure we process gamepad events no matter what, lest we lose disconnections and connections.
         self.gamepad_manager.process_gamepad_events();
 

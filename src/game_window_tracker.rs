@@ -38,9 +38,9 @@ impl GameWindowTracker {
             }
     }
 
-    pub fn update_window_tracker(&mut self) {
+    pub fn update_window_tracker(&mut self, overlay_window_zoom_multiplier: f32) {
         (self.game_window_pos_x, self.game_window_pos_y) = self.window_position();
-        (self.game_window_width, self.game_window_height) = self.window_size();
+        (self.game_window_width, self.game_window_height) = self.window_size(overlay_window_zoom_multiplier);       
     }
 
     fn window_position(&self) -> (f32, f32) {
@@ -54,10 +54,10 @@ impl GameWindowTracker {
         }
     }
 
-    fn window_size(&self) -> (f32, f32) {
+    fn window_size(&self, zoom_multiplier: f32) -> (f32, f32) {
         if self.windowed_mode && self.is_poe_active() {
             match active_win_pos_rs::get_position() {
-                Ok(position) => (position.width as f32, position.height as f32),
+                Ok(position) => (position.width as f32 * zoom_multiplier, position.height as f32 * zoom_multiplier),
                 Err(_) => (0.0, 0.0),
             }
         } else {

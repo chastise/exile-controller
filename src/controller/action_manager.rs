@@ -97,8 +97,6 @@ impl ActionManager {
         }
     }
 
-    pub fn update_window_tracker (&mut self) {self.game_window_tracker.update_window_tracker()}
-
     pub fn handle_character_actions(&mut self, ctx: &egui::Context) {
         let mut set_cursor = false;
 
