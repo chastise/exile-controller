@@ -22,9 +22,13 @@ eframe = { version = "0.33.0", default-features = false, features = [
     # "wayland",
     "x11",
 ] }
-wgpu = { version = "27.0.1", default-features = true }
+wgpu = {version = "27.0.1", optional = true, default-features = false}
 image = { version = "0.25", features = ["png"] }
 
+[features]
+default = ["normal-backends"]
+normal-backends = ["wgpu/default"]
+blackscreen-workaround = ["wgpu/std", "wgpu/parking_lot", "wgpu/gles"]
 
 [target.'cfg(windows)'.build-dependencies]
 winres = "0.1"
