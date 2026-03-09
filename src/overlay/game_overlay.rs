@@ -222,11 +222,11 @@ impl GameOverlay {
         ctx.send_viewport_cmd(ViewportCommand::InnerSize(response.rect.size()));
     }
 
-    fn handle_controller_input_loop (&mut self, ctx: &Context) {
+    fn handle_controller_input_loop (&mut self) {
         self.game_action_handler.process_input_buttons(self.gamepad_manager.controller_state.get_all_buttons());
         self.game_action_handler.process_input_analogs(self.gamepad_manager.controller_state.get_left_analog_stick(), 
                                             self.gamepad_manager.controller_state.get_right_analog_stick());
-        self.game_action_handler.handle_character_actions(ctx);
+        self.game_action_handler.handle_character_actions();
     }
 
     fn draw_overlay_viewport(&mut self, egui_context: &egui::Context) {
@@ -262,7 +262,7 @@ impl GameOverlay {
                     self.paint_crosshair(inner_ctx);
                 }
 
-                self.handle_controller_input_loop(egui_context);
+                self.handle_controller_input_loop();
                 if !self.gamepad_manager.is_controller_connected() {
                     self.game_input_started = false;
                     self.remote_open = true;

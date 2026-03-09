@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
+use mouse_position::mouse_position::{Mouse};
+
 use crate::game_window_tracker::GameWindowTracker;
-use crate::settings:: {ApplicationSettings, ButtonOrKey};
+use crate::settings::{ApplicationSettings, ButtonOrKey};
 
 use super::input::{ControllerButton, AnalogStick};
 use super::action_handler::{ActionHandler, ActionType};
@@ -97,7 +99,7 @@ impl ActionManager {
         }
     }
 
-    pub fn handle_character_actions(&mut self, ctx: &egui::Context) {
+    pub fn handle_character_actions(&mut self) {
         let mut set_cursor = false;
 
         // Execute planned actions
@@ -178,7 +180,7 @@ impl ActionManager {
         
         // if aiming and not moving!
         if self.holding_aim && !self.holding_walk {
-            let (new_x_pos, new_y_pos) = self.get_free_move_update(ctx);
+            let (new_x_pos, new_y_pos) = self.get_free_move_update();
             self.safe_move_mouse(new_x_pos, new_y_pos);
             set_cursor = true;
         } 
@@ -197,40 +199,47 @@ impl ActionManager {
     }
 
     fn safe_move_mouse(&self, new_x: f64, new_y: f64) {
-        if self.game_window_tracker.windowed_mode() {
-            let (new_safe_x, new_safe_y) = self.get_window_bounded_position(new_x, new_y);
-            self.action_handler.move_mouse(new_safe_x, new_safe_y);
+        let (window_x_min, window_y_min, window_x_max, window_y_max) = self.get_window_bounds(self.game_window_tracker.windowed_mode());
+        let (new_safe_x, new_safe_y) = self.get_bounded_position(new_x, new_y, window_x_min, window_y_min, window_x_max, window_y_max);
+        self.action_handler.move_mouse(new_safe_x, new_safe_y);
+    }
+
+    fn get_window_bounds(&self, windowed_mode: bool) -> (f64, f64, f64, f64) {
+        if windowed_mode {
+            #[cfg(target_os = "linux")]
+            let (title_bar_height, window_shadow_amount) = (2.0, 2.0); // magic numbers for linux
+            #[cfg(target_os = "windows")]
+            let (title_bar_height, window_shadow_amount) = (32.0, 10.0); // magic numbers, may only be correct on windows
+
+            let min_x_pos = (self.game_window_tracker.game_window_pos_x() + window_shadow_amount) as f64;
+            let min_y_pos = (self.game_window_tracker.game_window_pos_y() + title_bar_height) as f64;
+            let max_x_pos = (self.game_window_tracker.game_window_pos_x() + self.game_window_tracker.game_window_width() - window_shadow_amount) as f64;
+            let max_y_pos = (self.game_window_tracker.game_window_pos_y() + self.game_window_tracker.game_window_height() - window_shadow_amount) as f64;
+            (min_x_pos, min_y_pos, max_x_pos, max_y_pos)
         } else {
-            self.action_handler.move_mouse(new_x as f64, new_y as f64);
+            ((self.game_window_tracker.game_window_pos_x()) as f64, 
+             (self.game_window_tracker.game_window_pos_y()) as f64, 
+             (self.game_window_tracker.game_window_pos_x() + self.game_window_tracker.game_window_width()) as f64,
+             (self.game_window_tracker.game_window_pos_y() + self.game_window_tracker.game_window_height()) as f64)
         }
     }
-    
-    fn get_window_bounded_position(&self, new_x: f64, new_y: f64) -> (f64, f64) {
+
+    fn get_bounded_position(&self, new_x: f64, new_y: f64, window_x_min: f64, window_y_min: f64, window_x_max: f64, window_y_max: f64) -> (f64, f64) {
         let mut return_x = new_x;
         let mut return_y = new_y;
 
-        #[cfg(target_os = "linux")]
-        let (title_bar_height, window_shadow_amount) = (2.0, 2.0); // magic numbers for linux
-        #[cfg(target_os = "windows")]
-        let (title_bar_height, window_shadow_amount) = (32.0, 10.0); // magic numbers, may only be correct on windows
-
-        let min_x_pos = (self.game_window_tracker.game_window_pos_x() + window_shadow_amount) as f64;
-        let min_y_pos = (self.game_window_tracker.game_window_pos_y() + title_bar_height) as f64;
-        let max_x_pos = (self.game_window_tracker.game_window_pos_x() + self.game_window_tracker.game_window_width() - window_shadow_amount) as f64;
-        let max_y_pos = (self.game_window_tracker.game_window_pos_y() + self.game_window_tracker.game_window_height()- window_shadow_amount) as f64;
-        if new_x < min_x_pos {
-            return_x = min_x_pos;
-        } else if new_x > max_x_pos {
-            return_x = max_x_pos;
+        if new_x < window_x_min {
+            return_x = window_x_min;
+        } else if new_x > window_x_max {
+            return_x = window_x_max;
         }
-        if new_y < min_y_pos {
-            return_y = min_y_pos;
-        } else if new_y > max_y_pos {
-            return_y = max_y_pos;
+        if new_y < window_y_min {
+            return_y = window_y_min;
+        } else if new_y > window_y_max {
+            return_y = window_y_max;
         }
         (return_x, return_y)
     }
-
 
     fn get_radial_location(&self, circle_radius: f32, angle: f32) -> (f32, f32) {
         let screen_adjustment_x = angle.cos() * circle_radius;
@@ -249,15 +258,20 @@ impl ActionManager {
         }
     }
 
-    fn get_free_move_update(&self, ctx: &egui::Context) -> (f64, f64){
+    fn get_free_move_update(&self) -> (f64, f64){
         let screen_adjustment_x = self.aiming_stick_direction[0] * self.settings.controller_settings().free_mouse_sensitivity_px() ;
         let screen_adjustment_y = -1.0 * self.aiming_stick_direction[1] * self.settings.controller_settings().free_mouse_sensitivity_px();
-        // There is a chance that there _is_ no mouse position.
-        if let Some(position) = ctx.input(|i| i.pointer.hover_pos()) {
-            ((position.x + screen_adjustment_x) as f64, (position.y + screen_adjustment_y) as f64)
-            // Should we just panic here?
-        } else {
-            (0.0f64, 0.0f64)
+        // There is a chance that there _is_ no mouse position. In that case, snap to upper left / 0, 0
+        let position = Mouse::get_mouse_position();
+        match position {
+            Mouse::Position { x, y } => {
+                // println!("x: {}, y: {}", x, y);
+                ((x as f32 + screen_adjustment_x) as f64, (y as f32 + screen_adjustment_y) as f64)
+                },
+            Mouse::Error => {
+                println!("Error getting mouse position");
+                (0.0f64, 0.0f64)
+            }
         }
     }
 
