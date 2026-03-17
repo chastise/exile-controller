@@ -206,7 +206,7 @@ impl GameOverlay {
                             let pause_button = ui.button(egui::RichText::new("Pause Overlay")
                                                          .color(Color32::from_rgb(227, 117, 0))
                                                          .size(14.0)
-                            ).on_hover_text("Pause Controller Input");
+                            ); //.on_hover_text("Pause Controller Input");
                             if pause_button.clicked() {
                                 self.remote_open = true;
                                 self.game_input_started = false;
