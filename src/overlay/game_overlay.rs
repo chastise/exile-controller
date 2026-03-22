@@ -172,23 +172,30 @@ impl GameOverlay {
                     Sense::click_and_drag(),
                 );
 
-                egui::Grid::new("Remote Grid ID").min_col_width(220.0).show(ui, |ui| {
+                egui::Grid::new("Remote Grid ID").min_col_width(220.0).min_row_height(2.0).show(ui, |ui| {
                     if self.remote_open {
                         let mut can_overlay_start = true;
                         if self.gamepad_manager.is_controller_connected() {
                             let connected_controllers = self.gamepad_manager.get_connected_controllers();
-                            ui.add(egui::Label::new(egui::RichText::new("Select from connected controllers:").size(14.0)).selectable(false));
+                            ui.add(egui::Label::new(egui::RichText::new("Select from connected controllers:").color(Color32::from_rgb(227, 117, 0)).size(14.0)).selectable(false));
+                            ui.end_row();
+                            ui.add(egui::Separator::default().spacing(0.0));
                             ui.end_row();
                             // FIXME: These should be set to a max length in both the closed and open combobox display.
                             egui::ComboBox::from_id_salt("controller-select-dropdown")
                                 .selected_text(format!("{:?}", &mut self.selected_controller_dropdown_index))
                                 .show_index(ui, &mut self.selected_controller_dropdown_index, connected_controllers.len(), |i| connected_controllers[i].1.to_owned());
                             self.gamepad_manager.connect_to_controller(connected_controllers, self.selected_controller_dropdown_index);
-                            ui.end_row();
                         } else {
-                            ui.add(egui::Label::new("No controller connected.").selectable(false));
+                            ui.add(egui::Label::new(egui::RichText::new("No controller connected.").color(Color32::from_rgb(227, 117, 0)).size(14.0)).selectable(false));
                             can_overlay_start = false;
+                            ui.end_row();
+                            ui.add(egui::Separator::default().spacing(0.0));
+                            ui.end_row();
+                            ui.add(egui::Label::new(egui::RichText::new(" ").size(16.0))); // Pad dropdown 
                         }
+                        ui.end_row();
+                        ui.add(egui::Label::new(egui::RichText::new(" ").size(14.0))); // Add space between dropdown & start/quit buttons
                         ui.end_row();
                         ui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |ui| {
                             let start_button = ui.add_enabled(can_overlay_start, egui::Button::new("Start Controller Input"));
