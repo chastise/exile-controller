@@ -5,12 +5,12 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-config = {version = "0.15.19"}
+config = {version = "0.15.22"}
 serde = {version = "1.0.228", features = ["derive"]}
-gilrs = {version ="0.11.0", default-features = false, features = ["serde-serialize", "xinput"]}
+gilrs = {version ="0.11.1", default-features = false, features = ["serde-serialize", "xinput"]}
 rdev = {version = "0.5.3", features = ["serialize"]}
-active-win-pos-rs = "0.9.1"
-native-dialog = "0.9.4"
+active-win-pos-rs = "0.10.0"
+native-dialog = "0.9.6"
 mouse_position = "0.1.4"
 
 # egui
