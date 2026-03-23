@@ -3,6 +3,7 @@ name = "exile-controller"
 version = "0.5.0"
 edition = "2021"
 license = "MIT"
+exclude = ["/settings.toml", "/.gitignore"]
 
 [dependencies]
 config = {version = "0.15.22"}
