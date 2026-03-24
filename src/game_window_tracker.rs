@@ -50,18 +50,18 @@ impl GameWindowTracker {
                 Err(_) => (0.0, 0.0),
             }
         } else {
-            (0.0, 0.0)
+            (self.game_window_pos_x, self.game_window_pos_y) // Keep initial or last known values, if this gets called while another app is active.
         }
     }
 
     fn window_size(&self, zoom_multiplier: f32) -> (f32, f32) {
-        if self.windowed_mode && self.is_poe_active() {
+        if self.is_poe_active() {
             match active_win_pos_rs::get_position() {
                 Ok(position) => (position.width as f32 * zoom_multiplier, position.height as f32 * zoom_multiplier),
                 Err(_) => (0.0, 0.0),
             }
         } else {
-            (self.game_window_width, self.game_window_height)
+            (self.game_window_width, self.game_window_height) // Keep initial or last known values, if this gets called while another app is active.
         }
     }
 }

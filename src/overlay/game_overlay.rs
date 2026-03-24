@@ -22,7 +22,7 @@ struct GameOverlay {
     overlay_images: OverlayImages,
     controller_settings: ControllerSettings,
     gamepad_manager: GamepadManager, 
-    game_action_handler: ActionManager,
+    game_action_manager: ActionManager,
     remote_open: bool,
     game_input_started: bool,
     selected_controller_dropdown_index: usize,
@@ -230,10 +230,10 @@ impl GameOverlay {
     }
 
     fn handle_controller_input_loop (&mut self) {
-        self.game_action_handler.process_input_buttons(self.gamepad_manager.controller_state.get_all_buttons());
-        self.game_action_handler.process_input_analogs(self.gamepad_manager.controller_state.get_left_analog_stick(), 
+        self.game_action_manager.process_input_buttons(self.gamepad_manager.controller_state.get_all_buttons());
+        self.game_action_manager.process_input_analogs(self.gamepad_manager.controller_state.get_left_analog_stick(), 
                                             self.gamepad_manager.controller_state.get_right_analog_stick());
-        self.game_action_handler.handle_character_actions();
+        self.game_action_manager.handle_character_actions(self.game_window_tracker);
     }
 
     fn draw_overlay_viewport(&mut self, egui_context: &egui::Context) {
@@ -301,7 +301,7 @@ impl eframe::App for GameOverlay {
 pub fn start_overlay(overlay_settings: OverlaySettings, 
                      controller_settings: ControllerSettings, 
                      gamepad_manager: GamepadManager,
-                     game_action_handler: ActionManager, 
+                     action_manager: ActionManager, 
                      game_window_tracker: GameWindowTracker) {
     let screen_width = overlay_settings.screen_width();
     let screen_height = overlay_settings.screen_height();
@@ -311,7 +311,7 @@ pub fn start_overlay(overlay_settings: OverlaySettings,
         overlay_images: OverlayImages::default(),
         controller_settings: controller_settings,
         gamepad_manager: gamepad_manager,
-        game_action_handler: game_action_handler,
+        game_action_manager: action_manager,
         remote_open: true,
         game_input_started: false,
         selected_controller_dropdown_index: 0,

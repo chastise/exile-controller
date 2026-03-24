@@ -28,8 +28,9 @@ fn main() {
     println!("Starting gamepad manager.");
     let gamepad_manager = input::load_gamepad_manager(application_settings.controller_settings().controller_deadzone());
     println!("Initializing action handler."); 
-    let game_action_handler = action_manager::ActionManager::initialize(application_settings.clone(), GameWindowTracker::new(application_settings.clone()));
+    let action_manager = action_manager::ActionManager::initialize(application_settings.clone());
+    let game_window_tracker = GameWindowTracker::new(application_settings.clone());
 
     println!("Starting overlay");
-    game_overlay::start_overlay(application_settings.overlay_settings(), application_settings.controller_settings(), gamepad_manager, game_action_handler, GameWindowTracker::new(application_settings.clone()));
+    game_overlay::start_overlay(application_settings.overlay_settings(), application_settings.controller_settings(), gamepad_manager, action_manager, game_window_tracker);
 }
