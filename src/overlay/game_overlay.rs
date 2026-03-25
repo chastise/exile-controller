@@ -151,7 +151,7 @@ impl GameOverlay {
         gui_visuals.widgets.active.fg_stroke = epaint::Stroke {width: 1.0, color: Color32::from_rgb(215,210,210)};
         ctx.set_visuals(gui_visuals);
 
-        if self.gamepad_manager.is_controller_connected() {
+        if self.gamepad_manager.is_active_controller_connected() {
             // The user could update this setting as often as every frame?
             // TODO(Samantha): Move this somewhere sensible.
             let configured_controller_type = self.controller_settings.controller_type();
@@ -175,13 +175,17 @@ impl GameOverlay {
                 egui::Grid::new("Remote Grid ID").min_col_width(220.0).min_row_height(2.0).show(ui, |ui| {
                     if self.remote_open {
                         let mut can_overlay_start = true;
-                        if self.gamepad_manager.is_controller_connected() {
+                        if self.gamepad_manager.is_any_controller_connected() {
                             let connected_controllers = self.gamepad_manager.get_connected_controllers();
                             ui.add(egui::Label::new(egui::RichText::new("Select from connected controllers:").color(Color32::from_rgb(227, 117, 0)).size(14.0)).selectable(false));
                             ui.end_row();
                             ui.add(egui::Separator::default().spacing(0.0));
                             ui.end_row();
-                            // FIXME: These should be set to a max length in both the closed and open combobox display.
+                            
+                            // Catch for the case where a controller has disconnected and that controller's index is now out of bounds. 
+                            if self.selected_controller_dropdown_index >= connected_controllers.len() {self.selected_controller_dropdown_index = 0;}
+                            
+                            // FIXME: These should be set to a max width in both the closed and open combobox display.
                             egui::ComboBox::from_id_salt("controller-select-dropdown")
                                 .selected_text(format!("{:?}", &mut self.selected_controller_dropdown_index))
                                 .show_index(ui, &mut self.selected_controller_dropdown_index, connected_controllers.len(), |i| connected_controllers[i].1.to_owned());
@@ -270,7 +274,7 @@ impl GameOverlay {
                 }
 
                 self.handle_controller_input_loop();
-                if !self.gamepad_manager.is_controller_connected() {
+                if !self.gamepad_manager.is_active_controller_connected() {
                     self.game_input_started = false;
                     self.remote_open = true;
                 }

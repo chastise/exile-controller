@@ -177,8 +177,8 @@ pub enum ControllerTypeDetection {
 
 pub struct GamepadManager {
     gilrs_context: Gilrs,
-    gamepad_id: Option<GamepadId>,
-    controller_type: Option<ControllerType>,
+    connected_gamepad_id: Option<GamepadId>,
+    connected_controller_type: Option<ControllerType>,
     pub controller_type_detection: ControllerTypeDetection,
     pub controller_state: ControllerState,
 }
@@ -188,8 +188,8 @@ pub fn load_gamepad_manager(analog_deadzone: f32) -> GamepadManager {
 
     let mut gamepad_manager = GamepadManager{
         gilrs_context: gilrs,
-        gamepad_id: None,
-        controller_type: None,
+        connected_gamepad_id: None,
+        connected_controller_type: None,
         controller_type_detection: ControllerTypeDetection::Auto,
         controller_state: ControllerState::default(),
     };
@@ -207,11 +207,11 @@ pub fn load_gamepad_manager(analog_deadzone: f32) -> GamepadManager {
 impl GamepadManager {
     pub fn process_gamepad_events(&mut self) {
         while let Some(Event { id, event, time: _ , .. }) = self.gilrs_context.next_event() {
-            match self.gamepad_id {
+            match self.connected_gamepad_id {
                 Some(gamepad_id) => {
                     if id == gamepad_id {
                         match event {
-                            EventType::Disconnected => self.disconnect_connected_controller(),
+                            EventType::Disconnected => {self.disconnect_connected_controller(); break;}, // TODO: Make this escape out and explicity fix remote state
                             EventType::ButtonChanged(button, value, _code) => {
                                 //println!("Button Changed! {:?}: {value} : {code}!", button);
                                 match button {
@@ -267,26 +267,30 @@ impl GamepadManager {
         connected_controllers
     }
 
-    pub fn is_controller_connected(&self) -> bool {
+    pub fn is_any_controller_connected(&self) -> bool {
         self.get_connected_controllers().len() > 0
+    }
+
+    pub fn is_active_controller_connected(&self) -> bool {
+        self.connected_gamepad_id != None
     }
 
     pub fn connect_to_controller(&mut self, connected_controllers: Vec<(GamepadId, String)>, index: usize) { 
         let gamepad_id = connected_controllers[index].0;
-        self.gamepad_id = Some(gamepad_id);
-        self.controller_type = Some(self.infer_controller_type());
+        self.connected_gamepad_id = Some(gamepad_id);
+        self.connected_controller_type = Some(self.infer_controller_type());
     }
 
     pub fn get_connected_controller_label(&self) -> String {
-        match self.gamepad_id {
+        match self.connected_gamepad_id {
             Some(id) => self.gilrs_context.gamepad(id).os_name().to_owned(),
             None => "none".to_owned(),
         }
     }
 
     pub fn get_connected_controller_map_name(&self) -> String {
-        if self.is_controller_connected() {
-            match self.gilrs_context.gamepad(self.gamepad_id.unwrap()).map_name() {
+        if self.is_active_controller_connected() {
+            match self.gilrs_context.gamepad(self.connected_gamepad_id.unwrap()).map_name() {
                 Some(mapper) => mapper.to_owned(),
                 None => "none".to_owned(),
             }
@@ -296,9 +300,9 @@ impl GamepadManager {
     }
 
     pub fn disconnect_connected_controller(&mut self) {
-        if self.is_controller_connected() {
-            self.gamepad_id = None;
-            println!("Controller disconnected!");
+        if self.is_active_controller_connected() {
+            println!("Controller {} disconnected!", self.connected_gamepad_id.unwrap());
+            self.connected_gamepad_id = None;
         } else {
             println!("Failed to disconnect controller. Already disconnected?");
         }
@@ -321,7 +325,7 @@ impl GamepadManager {
     pub fn determine_controller_type(&self) -> ControllerType {
         match self.controller_type_detection {
             ControllerTypeDetection::Forced(controller_type) => controller_type,
-            ControllerTypeDetection::Auto => self.controller_type.unwrap(),
+            ControllerTypeDetection::Auto => self.connected_controller_type.unwrap(),
         }
     }
 
